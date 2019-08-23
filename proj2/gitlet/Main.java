@@ -1,6 +1,5 @@
 package gitlet;
 
-import java.awt.color.CMMException;
 import java.io.*;
 
 /* Driver class for Gitlet, the tiny stupid version-control system.
@@ -94,21 +93,38 @@ public class Main {
         return tree;
     }
 
+    private static boolean checkNumArgs(int numArgs, String... args){
 
+        return args.length == numArgs;
+    }
 
     /* Usage: java gitlet.Main ARGS, where ARGS contains
        <COMMAND> <OPERAND> .... */
     public static void main(String... args) {
-        // TODO: YOUR CODE HERE
+
+        // TODO: Incorrect operands not clean
+        if (args.length == 0){
+            System.out.println("Please enter a command");
+            return;
+        }
 
         Main program = new Main();
-
-        String command = args[0];
-
         program.setTree_(program.loadTree());
 
+        if (program.getTree_() == null && !args[0].equals("init")){
+            System.out.println("Not in an initialized gitlet directory.");
+            return;
+        }
+
+        String command = args[0];
         switch (command){
             case "init":
+
+                if (!checkNumArgs(1, args)){
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+
                 boolean created = program.createGitletDirectory();
                 if (created){
                     program.setTree_(CommitTree.initCommitTree());
@@ -116,19 +132,41 @@ public class Main {
                 break;
 
             case "add":
+
+                if (!checkNumArgs(2, args)){
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+
                 program.getTree_().add(args[1]);
                 break;
             case "commit":
+
+                if (!checkNumArgs(2, args)){
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+
                 program.getTree_().commit(args[1]);
                 break;
             case "log":
+
+                if (!checkNumArgs(1, args)){
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+
                 program.getTree_().log();
                 break;
+
             case "checkout":
                 // 3 args
                 program.getTree_().checkoutSingleFile(args[2]);
                 break;
 
+            default:
+                System.out.println("No command with that name exists.");
+                break;
         }
 
         program.SaveTree();
