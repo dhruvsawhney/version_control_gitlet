@@ -148,9 +148,7 @@ public class CommitTree implements Serializable {
     }
 
 
-    public void log(){
-        String commitHash = activeBranch_.getHeadCommit_();
-
+    private void logPrinter(String commitHash){
         while (commitHash != null){
 
             Commit currCommit = Commit.readCommitFromDisk(commitHash);
@@ -161,6 +159,21 @@ public class CommitTree implements Serializable {
             System.out.println();
 
             commitHash = currCommit.getParentCommitID_();
+        }
+    }
+
+    public void log(){
+        logPrinter(activeBranch_.getHeadCommit_());
+    }
+
+    public void globalLog(){
+
+        for (Branch branch : branchNameToBranch_.values()){
+
+            System.out.println();
+            System.out.println("Branch: " + branch.getBranchName_());
+
+            logPrinter(branch.getBranchPtr_());
         }
     }
 
@@ -184,4 +197,5 @@ public class CommitTree implements Serializable {
             e.printStackTrace();
         }
     }
+
 }

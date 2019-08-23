@@ -159,6 +159,15 @@ public class Main {
                 program.getTree_().log();
                 break;
 
+            case "global-log":
+                if (!checkNumArgs(1, args)){
+                    System.out.println("Incorrect operands.");
+                    return;
+                }
+
+                program.getTree_().globalLog();
+                break;
+
             case "checkout":
                 // 3 args
                 program.getTree_().checkoutSingleFile(args[2]);
