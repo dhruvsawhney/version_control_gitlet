@@ -112,10 +112,18 @@ public class CommitTree implements Serializable {
         stagingArea_ = new StagingArea(prevCommitFileToBlob);
 
         // change pointers for commit on active branch
-        activeBranch_.setHeadCommit_(commit.getThisCommitID_());
+        if (activeBranch_.getBranchPtr_().equals(activeBranch_.getHeadCommit_())){
+            activeBranch_.setHeadCommit_(commit.getThisCommitID_());
+            activeBranch_.setBranchPtr_(commit.getThisCommitID_());
+        } else {
+            // TODO :: in detached head state and a commit is made
+            activeBranch_.setHeadCommit_(commit.getThisCommitID_());
+        }
+
     }
 
 
+    // TODO :: not sure about branching logic
     public void rm(String fileName){
 
         Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
