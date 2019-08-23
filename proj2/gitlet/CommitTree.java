@@ -177,6 +177,33 @@ public class CommitTree implements Serializable {
         }
     }
 
+    public void find(String commitMessage){
+
+        boolean foundCommit = false;
+
+        for (Branch branch : branchNameToBranch_.values()){
+
+            // start from the branch pointer for case that head and branchPtr differ
+            String commitID = branch.getBranchPtr_();
+
+            while (commitID != null){
+
+                Commit commit = Commit.readCommitFromDisk(commitID);;
+
+                if (commit.getCommitMessage_().equals(commitMessage)){
+                    foundCommit = true;
+                    System.out.println(commit.getThisCommitID_());
+                }
+
+                commitID = commit.getParentCommitID_();
+            }
+        }
+
+        if (!foundCommit){
+            System.out.println("Found no commit with that message.");
+        }
+    }
+
     // TODO :: error handling
     public void checkoutSingleFile(String fileName){
 

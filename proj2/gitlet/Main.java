@@ -93,9 +93,13 @@ public class Main {
         return tree;
     }
 
-    private static boolean checkNumArgs(int numArgs, String... args){
-
-        return args.length == numArgs;
+    private static void checkNumArgs(int numArgs, String[] args){
+;
+        if (args.length != numArgs){
+            System.out.println("Incorrect operands.");
+            System.exit(1);
+        }
+//        return args.length == numArgs;
     }
 
     /* Usage: java gitlet.Main ARGS, where ARGS contains
@@ -120,10 +124,7 @@ public class Main {
         switch (command){
             case "init":
 
-                if (!checkNumArgs(1, args)){
-                    System.out.println("Incorrect operands.");
-                    return;
-                }
+                checkNumArgs(1, args);
 
                 boolean created = program.createGitletDirectory();
                 if (created){
@@ -133,39 +134,32 @@ public class Main {
 
             case "add":
 
-                if (!checkNumArgs(2, args)){
-                    System.out.println("Incorrect operands.");
-                    return;
-                }
-
+                checkNumArgs(2, args);
                 program.getTree_().add(args[1]);
                 break;
+
             case "commit":
 
-                if (!checkNumArgs(2, args)){
-                    System.out.println("Incorrect operands.");
-                    return;
-                }
-
+                checkNumArgs(2, args);
                 program.getTree_().commit(args[1]);
                 break;
+
             case "log":
 
-                if (!checkNumArgs(1, args)){
-                    System.out.println("Incorrect operands.");
-                    return;
-                }
-
+                checkNumArgs(1, args);
                 program.getTree_().log();
                 break;
 
             case "global-log":
-                if (!checkNumArgs(1, args)){
-                    System.out.println("Incorrect operands.");
-                    return;
-                }
 
+                checkNumArgs(1, args);
                 program.getTree_().globalLog();
+                break;
+
+            case "find":
+
+                checkNumArgs(2, args);
+                program.getTree_().find(args[1]);
                 break;
 
             case "checkout":
