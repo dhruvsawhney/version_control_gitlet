@@ -9,8 +9,7 @@ import java.util.Map;
 
 public class Commit implements Serializable {
 
-    private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-
+    private static final DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     String commitMessage_;
     String parentCommitID_;
@@ -60,6 +59,20 @@ public class Commit implements Serializable {
     public Map<String, String> getFileToBlobIDMap_() {
         return fileToBlobIDMap_;
     }
+
+
+    public String getParentCommitID_() {
+        return parentCommitID_;
+    }
+
+    public String getTimestamp_() {
+        return timestamp_;
+    }
+
+    public String getCommitMessage_() {
+        return commitMessage_;
+    }
+
     // write commit object to disk
     public void writeCommitToDisk(){
         String[] tempArr = new String[2];

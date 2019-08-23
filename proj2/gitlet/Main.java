@@ -1,5 +1,6 @@
 package gitlet;
 
+import java.awt.color.CMMException;
 import java.io.*;
 
 /* Driver class for Gitlet, the tiny stupid version-control system.
@@ -120,10 +121,14 @@ public class Main {
             case "commit":
                 program.getTree_().commit(args[1]);
                 break;
+            case "log":
+                program.getTree_().log();
+                break;
             case "checkout":
                 // 3 args
                 program.getTree_().checkoutSingleFile(args[2]);
                 break;
+
         }
 
         program.SaveTree();

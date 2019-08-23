@@ -115,6 +115,47 @@ public class CommitTree implements Serializable {
         activeBranch_.setHeadCommit_(commit.getThisCommitID_());
     }
 
+
+    public void rm(String fileName){
+
+        Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
+
+        if (!stagingArea_.getFileToAdd_().contains(fileName) && !headCommit.getFileToBlobIDMap_().containsKey(fileName)){
+            System.out.println("No reason to remove the file.");
+            return;
+        }
+
+        if (headCommit.getFileToBlobIDMap_().containsKey(fileName)){
+
+            // TODO :: the path to the file?
+            File file = new File(fileName);
+            file.delete();
+
+            //mark un-track
+            stagingArea_.getFileToRemove_().add(fileName);
+        }
+
+        // in the case not on head commit but said to track
+        stagingArea_.getFileToAdd_().remove(fileName);
+    }
+
+
+    public void log(){
+        String commitHash = activeBranch_.getHeadCommit_();
+
+        while (commitHash != null){
+
+            Commit currCommit = Commit.readCommitFromDisk(commitHash);
+            System.out.println("===");
+            System.out.println("Commit " + currCommit.getThisCommitID_());
+            System.out.println(currCommit.getTimestamp_());
+            System.out.println(currCommit.getCommitMessage_());
+            System.out.println();
+
+            commitHash = currCommit.getParentCommitID_();
+        }
+    }
+
     // TODO :: error handling
     public void checkoutSingleFile(String fileName){
 
