@@ -109,21 +109,24 @@ public class Main {
 
             if (!args[1].equals("--")){
                 System.out.println("Incorrect operands.");
-                System.exit(1);
+//                System.exit(1);
+                return;
             }
             this.getTree_().checkoutFile(args[2]);
         } else if (args.length == 4){
 
             if (!args[2].equals("--")){
                 System.out.println("Incorrect operands.");
-                System.exit(1);
+//                System.exit(1);
+                return;
             }
 
             this.getTree_().checkoutFilePrevCommmit(args[1], args[3]);
 
         } else if (args.length > 4){
             System.out.println("Incorrect operands.");
-            System.exit(1);
+//            System.exit(1);
+            return;
         }
     }
 

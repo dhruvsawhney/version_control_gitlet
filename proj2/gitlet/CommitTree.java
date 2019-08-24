@@ -328,7 +328,8 @@ public class CommitTree implements Serializable {
         List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
 
         for (String file : workingDirFiles){
-            if (!stagingArea_.getFileToAdd_().contains(file) && !currCommit.getFileToBlobIDMap_().containsKey(file)
+            // !stagingArea_.getFileToAdd_().contains(file) (&& with first condition)
+            if (!currCommit.getFileToBlobIDMap_().containsKey(file)
                     || stagingArea_.getFileToRemove_().contains(file)){
                 untrackedFiles.add(file);
             }
