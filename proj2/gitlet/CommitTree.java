@@ -59,6 +59,9 @@ public class CommitTree implements Serializable {
             return;
         }
 
+        // remove from staging area: file un-tracked from next commit
+        stagingArea_.getFileToRemove_().remove(fileName);
+
         File fileToAdd = new File(fileName);
         try {
             byte[] fileToAddBytes = Files.readAllBytes(fileToAdd.toPath());
@@ -81,7 +84,7 @@ public class CommitTree implements Serializable {
     }
 
     public void commit(String commitMessage){
-        if (commitMessage == null){
+        if (commitMessage.length() == 0){
             System.out.println("Please enter a commit message.");
             return;
         }
