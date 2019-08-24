@@ -317,6 +317,26 @@ public class CommitTree implements Serializable {
         overwriteWorkingDir(commit, fileName);
     }
 
+    // with respect to the current commit
+    private List<String> getUntrackedFiles(){
+
+        Commit currCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
+
+        // Un-tracked file:  neither staged for addition nor tracked
+        // or staged for removal, but then re-added without gitlet’s knowledge
+        List<String> untrackedFiles = new ArrayList<>();
+        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+
+        for (String file : workingDirFiles){
+            if (!stagingArea_.getFileToAdd_().contains(file) && !currCommit.getFileToBlobIDMap_().containsKey(file)
+                    || stagingArea_.getFileToRemove_().contains(file)){
+                untrackedFiles.add(file);
+            }
+        }
+
+        return untrackedFiles;
+    }
+
     public void checkoutBranch(String branchName){
 
         if (!branchNameToBranch_.containsKey(branchName)){
@@ -334,21 +354,7 @@ public class CommitTree implements Serializable {
         Branch checkoutBranch = branchNameToBranch_.get(branchName);
         Commit checkoutCommit = Commit.readCommitFromDisk(checkoutBranch.getHeadCommit_());
 
-        Commit currCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
-
-
-        // Un-tracked file:  neither staged for addition nor tracked
-        // or staged for removal, but then re-added without gitlet’s knowledge
-        List<String> untrackedFiles = new ArrayList<>();
-        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
-
-        for (String file : workingDirFiles){
-            if (!stagingArea_.getFileToAdd_().contains(file) && !currCommit.getFileToBlobIDMap_().containsKey(file)
-            || stagingArea_.getFileToRemove_().contains(file)){
-                untrackedFiles.add(file);
-            }
-        }
-
+        List<String> untrackedFiles = getUntrackedFiles();
         for (String untrackedFile : untrackedFiles){
             if (checkoutCommit.getFileToBlobIDMap_().containsKey(untrackedFile)){
                 System.out.println("There is an untracked file in the way; delete it or add it first.");
@@ -360,6 +366,7 @@ public class CommitTree implements Serializable {
             overwriteWorkingDir(checkoutCommit, fileName);
         }
 
+        Commit currCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
         // delete files tracked by current branch but not present in checkoutBranch
         for (String fileName : currCommit.getFileToBlobIDMap_().keySet()){
 
@@ -400,5 +407,51 @@ public class CommitTree implements Serializable {
         }
 
         deleteBranchMapping(branchName);
+    }
+
+    // on the current branch
+    public void reset(String commitID){
+
+        boolean found = false;
+        String branchCommit = activeBranch_.getBranchPtr_();
+
+        while(branchCommit != null){
+
+            Commit commit = Commit.readCommitFromDisk(branchCommit);
+
+            if (commit.getThisCommitID_().equals(commitID)){
+                found = true;
+                break;
+            }
+
+            branchCommit = commit.getParentCommitID_();
+        }
+
+        if (!found){
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+
+        Commit resetCommit = Commit.readCommitFromDisk(branchCommit);
+        // untracked Files on this branch
+        List<String> untrackedFiles = getUntrackedFiles();
+
+//        for (String file : untrackedFiles){
+//            if (resetCommit.getFileToBlobIDMap_().containsKey(file)){
+//                System.out.println("There is an untracked file in the way; delete it or add it first.");
+//                return;
+//            }
+//        }
+
+        // delete files tracked by current commit, but not by reset commit
+        for (String file : getHeadCommit().getFileToBlobIDMap_().keySet()){
+
+            if (!resetCommit.getFileToBlobIDMap_().containsKey(file)){
+                Utils.restrictedDelete(file);
+            }
+        }
+
+        // reset the head commit
+        activeBranch_.setHeadCommit_(resetCommit.getThisCommitID_());
     }
 }
