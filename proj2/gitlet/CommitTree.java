@@ -124,10 +124,11 @@ public class CommitTree implements Serializable {
 
 
     // TODO :: not sure about branching logic
-    public void rm(String fileName){
+    public void removeFile(String fileName){
 
         Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
 
+        // neither staged nor tracked by current commit
         if (!stagingArea_.getFileToAdd_().contains(fileName) && !headCommit.getFileToBlobIDMap_().containsKey(fileName)){
             System.out.println("No reason to remove the file.");
             return;
@@ -267,7 +268,6 @@ public class CommitTree implements Serializable {
         }
     }
 
-    // TODO :: error handling
     public void checkoutFile(String fileName){
 
         Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
