@@ -199,6 +199,16 @@ public class Main {
                 program.checkoutArgs(args);
                 break;
 
+            case "branch":
+                checkNumArgs(2, args);
+                program.getTree_().branch(args[1]);
+                break;
+
+            case "rm-branch":
+                checkNumArgs(2, args);
+                program.getTree_().removeBranch(args[1]);
+                break;
+
             default:
                 System.out.println("No command with that name exists.");
                 break;

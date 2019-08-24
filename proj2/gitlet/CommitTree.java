@@ -6,29 +6,33 @@ import java.util.*;
 
 public class CommitTree implements Serializable {
 
-    Branch activeBranch_;
-    Map<String, Branch> branchNameToBranch_;
-    StagingArea stagingArea_;
+    private Branch activeBranch_;
+    private Map<String, Branch> branchNameToBranch_;
+    private StagingArea stagingArea_;
 
     public CommitTree(){
         branchNameToBranch_ = new HashMap<>();
         stagingArea_ = new StagingArea(new HashMap<>());
     }
 
-    public void setActiveBranch_(Branch activeBranch) {
+    private void setActiveBranch_(Branch activeBranch) {
         activeBranch_ = activeBranch;
     }
 
-    public void addBranchMapping(String branchName, Branch newBranch){
+    private void addBranchMapping(String branchName, Branch newBranch){
         branchNameToBranch_.put(branchName, newBranch);
     }
 
-    public void setStagingAreaMapping(Map<String, String> prevFileToBlobMap){
+    private void deleteBranchMapping(String branchName){
+        branchNameToBranch_.remove(branchName);
+    }
+
+    private void setStagingAreaMapping(Map<String, String> prevFileToBlobMap){
         stagingArea_.setPrevCommitFileToBlobIDMap(prevFileToBlobMap);
     }
 
     // return the head commit on the active branch
-    public Commit getHeadCommit(){
+    private Commit getHeadCommit(){
         return Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
     }
 
@@ -369,5 +373,32 @@ public class CommitTree implements Serializable {
 
         // reset pointer for branch
         setActiveBranch_(checkoutBranch);
+    }
+
+
+    public void branch(String branchName){
+
+        if (branchNameToBranch_.containsKey(branchName)){
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+
+        Branch branch = new Branch(branchName, activeBranch_.getHeadCommit_());
+        addBranchMapping(branchName, branch);
+    }
+
+    public void removeBranch(String branchName){
+
+        if (!branchNameToBranch_.containsKey(branchName)){
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+
+        if (activeBranch_.getBranchName_().equals(branchName)){
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+
+        deleteBranchMapping(branchName);
     }
 }
