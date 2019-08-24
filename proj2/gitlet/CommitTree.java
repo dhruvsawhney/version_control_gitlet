@@ -141,10 +141,7 @@ public class CommitTree implements Serializable {
 
         if (headCommit.getFileToBlobIDMap_().containsKey(fileName)){
 
-            // TODO :: the path to the file?
-            File file = new File(fileName);
-            file.delete();
-
+            Utils.restrictedDelete(fileName);
             //mark un-track
             stagingArea_.getFileToRemove_().add(fileName);
         }
@@ -362,8 +359,7 @@ public class CommitTree implements Serializable {
         for (String fileName : currCommit.getFileToBlobIDMap_().keySet()){
 
             if (!checkoutCommit.getFileToBlobIDMap_().containsKey(fileName)){
-                File file = new File(fileName);
-                file.delete();
+                Utils.restrictedDelete(fileName);
             }
         }
 
