@@ -70,7 +70,6 @@ public class CommitTree implements Serializable {
 
 
             Commit currCommit = getHeadCommit();
-            // TODO :: not efficient
             Blob currBlob = currCommit.blobExist(fileHash);
 
             // do not add if identical data and filename
@@ -127,8 +126,6 @@ public class CommitTree implements Serializable {
 
     }
 
-
-    // TODO :: not sure about branching logic
     public void removeFile(String fileName){
 
         Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
@@ -211,7 +208,6 @@ public class CommitTree implements Serializable {
 
         List<String> branches = new ArrayList<>(branchNameToBranch_.keySet());
         List<String> stagedFiles = new ArrayList<>(stagingArea_.getFileToAdd_());
-        // TODO :: use of the remove files in staging area?
         List<String> removedFiles = new ArrayList<>(stagingArea_.getFileToRemove_());
 
         Collections.sort(branches);
@@ -272,6 +268,7 @@ public class CommitTree implements Serializable {
 
     public void checkoutFile(String fileName){
 
+        // checkout file from the head commit
         Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
 
         if (!headCommit.getFileToBlobIDMap_().containsKey(fileName)){
@@ -284,7 +281,8 @@ public class CommitTree implements Serializable {
 
     public void checkoutFilePrevCommmit(String commitID, String fileName){
 
-        // TODO :: find commit on this branch only?
+        // checkout file on the active branch
+        // use of BranchPtr to access all commits along branch
         String currPtr = activeBranch_.getBranchPtr_();
         boolean found = false;
 
@@ -327,13 +325,16 @@ public class CommitTree implements Serializable {
             return;
         }
 
-        // TODO :: checkout from head or branchPtr?
+        // From the checkout Branch, use its head-commit
+        // as it is indicative of active node on branch
         Branch checkoutBranch = branchNameToBranch_.get(branchName);
         Commit checkoutCommit = Commit.readCommitFromDisk(checkoutBranch.getHeadCommit_());
 
         Commit currCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
 
-        // TODO :: untracked files (2 conditions stated in reading)
+
+        // Un-tracked file:  neither staged for addition nor tracked
+        // or staged for removal, but then re-added without gitlet’s knowledge
         List<String> untrackedFiles = new ArrayList<>();
         List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
 

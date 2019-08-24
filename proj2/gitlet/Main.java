@@ -131,7 +131,6 @@ public class Main {
        <COMMAND> <OPERAND> .... */
     public static void main(String... args) {
 
-        // TODO: Incorrect operands not clean
         if (args.length == 0){
             System.out.println("Please enter a command");
             return;
@@ -169,7 +168,6 @@ public class Main {
                 program.getTree_().commit(args[1]);
                 break;
 
-            // TODO :: unsure about logic
             case "rm":
                 checkNumArgs(2, args);
                 program.getTree_().removeFile(args[1]);
