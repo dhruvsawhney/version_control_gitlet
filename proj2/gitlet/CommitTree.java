@@ -204,6 +204,48 @@ public class CommitTree implements Serializable {
         }
     }
 
+    public void status(){
+
+        List<String> branches = new ArrayList<>(branchNameToBranch_.keySet());
+        List<String> stagedFiles = new ArrayList<>(stagingArea_.getFileToAdd_());
+        // TODO :: use of the remove files in staging area?
+        List<String> removedFiles = new ArrayList<>(stagingArea_.getFileToRemove_());
+
+        Collections.sort(branches);
+        Collections.sort(stagedFiles);
+        Collections.sort(removedFiles);
+
+        System.out.println("=== Branches ===");
+        for (String branchName : branches){
+            if (branchName.equals(activeBranch_.getBranchName_())){
+                System.out.println("*" + branchName);
+            } else {
+                System.out.println(branchName);
+            }
+        }
+
+
+        System.out.println();
+        System.out.println("=== Staged Files ===");
+        for (String stagedFile : stagedFiles){
+            System.out.println(stagedFile);
+        }
+
+
+
+        System.out.println();
+        System.out.println("=== Removed Files ===");
+        for (String removedFile : removedFiles){
+            System.out.println(removedFile);
+        }
+
+        System.out.println();
+        System.out.println("=== Modifications Not Staged For Commit ===");
+
+        System.out.println();
+        System.out.println("=== Untracked Files ===");
+    }
+
     // TODO :: error handling
     public void checkoutSingleFile(String fileName){
 

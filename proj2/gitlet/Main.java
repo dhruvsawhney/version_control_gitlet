@@ -162,6 +162,11 @@ public class Main {
                 program.getTree_().find(args[1]);
                 break;
 
+            case "status":
+                checkNumArgs(1, args);
+                program.getTree_().status();
+                break;
+
             case "checkout":
                 // 3 args
                 program.getTree_().checkoutSingleFile(args[2]);
