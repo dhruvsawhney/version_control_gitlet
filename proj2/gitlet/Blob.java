@@ -16,30 +16,22 @@ public class Blob implements Serializable {
         return contentHash_;
     }
 
-    // the file
+
     String fileName_;
-    // the .txt data as a string
-    String contentAsString_;
-    // the content hashed
+
+    byte[] contentAsBytes_;
+
     String contentHash_;
 
     public Blob(String fileName){
         fileName_ = fileName;
-        contentAsString_ = setContentAsString_();
+        contentAsBytes_ = setContentAsBytes_();
         contentHash_ = setContentHash_();
     }
 
-    public String setContentAsString_() {
+    public byte[] setContentAsBytes_() {
 
-        try (Stream<String> lines = Files.lines(Paths.get(fileName_))) {
-
-            return lines.collect(Collectors.joining(System.lineSeparator()));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+        return Utils.readContents(new File(fileName_));
     }
 
 
@@ -58,8 +50,8 @@ public class Blob implements Serializable {
     }
 
 
-    public String getContentAsString_() {
-        return contentAsString_;
+    public byte[] getContentAsBytes_() {
+        return contentAsBytes_;
     }
 
     // write commit object to disk

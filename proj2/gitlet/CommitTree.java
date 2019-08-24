@@ -263,7 +263,7 @@ public class CommitTree implements Serializable {
             // false to overwrite
             FileOutputStream fileStream = new FileOutputStream(file, false);
 
-            byte[] blobContents = blob.getContentAsString_().getBytes();
+            byte[] blobContents = blob.getContentAsBytes_();
             fileStream.write(blobContents);
             fileStream.close();
         } catch (FileNotFoundException e) {
