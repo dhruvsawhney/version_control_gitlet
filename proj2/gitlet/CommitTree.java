@@ -62,20 +62,22 @@ public class CommitTree implements Serializable {
         // remove from staging area: file un-tracked from next commit
         stagingArea_.getFileToRemove_().remove(fileName);
 
-        File fileToAdd = new File(fileName);
+
         try {
+            File fileToAdd = new File(fileName);
             byte[] fileToAddBytes = Files.readAllBytes(fileToAdd.toPath());
             String fileHash = Utils.sha1(fileToAddBytes);
 
-            // do not add file if identical to current commit
-            Commit currCommit = getHeadCommit();
 
+            Commit currCommit = getHeadCommit();
             // TODO :: not efficient
-            if (currCommit.blobExist(fileHash)){
+            Blob currBlob = currCommit.blobExist(fileHash);
+
+            // do not add if identical data and filename
+            if (currBlob != null && currBlob.getFileName_().equals(fileToAdd.getName())){
                 return;
             }
 
-            // TODO: CANNOT REMOVE HERE :: separate command
             stagingArea_.getFileToAdd_().add(fileName);
 
         } catch (IOException e) {

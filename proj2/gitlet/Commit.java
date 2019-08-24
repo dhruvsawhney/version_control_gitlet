@@ -116,16 +116,17 @@ public class Commit implements Serializable {
         return commitObj;
     }
 
-    public boolean blobExist(String blobHash){
+    // return the blob if it exists
+    public Blob blobExist(String blobHash){
 
-        for(String b : fileToBlobIDMap_.values()){
+        for(String blobID : fileToBlobIDMap_.values()){
 
-            if (b.equals(blobHash)){
-                return true;
+            if (blobID.equals(blobHash)){
+                return Blob.readBlobFromDisk(blobID);
             }
         }
 
-        return false;
+        return null;
     }
 
     public Blob getBlob(String fileName){
