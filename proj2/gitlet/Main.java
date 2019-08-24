@@ -94,12 +94,37 @@ public class Main {
     }
 
     private static void checkNumArgs(int numArgs, String[] args){
-;
+
         if (args.length != numArgs){
             System.out.println("Incorrect operands.");
             System.exit(1);
         }
-//        return args.length == numArgs;
+    }
+
+    private void checkoutArgs(String[] args){
+        // len is at least 1
+        if (args.length == 2){
+            this.getTree_().checkoutBranch(args[1]);
+        } else if (args.length == 3){
+
+            if (!args[1].equals("--")){
+                System.out.println("Incorrect operands.");
+                System.exit(1);
+            }
+            this.getTree_().checkoutFile(args[2]);
+        } else if (args.length == 4){
+
+            if (!args[2].equals("--")){
+                System.out.println("Incorrect operands.");
+                System.exit(1);
+            }
+
+            this.getTree_().checkoutFilePrevCommmit(args[1], args[3]);
+
+        } else if (args.length > 4){
+            System.out.println("Incorrect operands.");
+            System.exit(1);
+        }
     }
 
     /* Usage: java gitlet.Main ARGS, where ARGS contains
@@ -168,8 +193,7 @@ public class Main {
                 break;
 
             case "checkout":
-                // 3 args
-                program.getTree_().checkoutSingleFile(args[2]);
+                program.checkoutArgs(args);
                 break;
 
             default:

@@ -246,11 +246,11 @@ public class CommitTree implements Serializable {
         System.out.println("=== Untracked Files ===");
     }
 
-    // TODO :: error handling
-    public void checkoutSingleFile(String fileName){
 
-        Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
-        Blob blob = headCommit.getBlob(fileName);
+    // pass the commit object and fileName to overwrite in current dir
+    // Note: does not check presence of file in working dir
+    private void overwriteWorkingDir(Commit commit, String fileName){
+        Blob blob = commit.getBlob(fileName);
 
         try {
             File file = new File(fileName);
@@ -267,4 +267,105 @@ public class CommitTree implements Serializable {
         }
     }
 
+    // TODO :: error handling
+    public void checkoutFile(String fileName){
+
+        Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
+
+        if (!headCommit.getFileToBlobIDMap_().containsKey(fileName)){
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+
+        overwriteWorkingDir(headCommit, fileName);
+    }
+
+    public void checkoutFilePrevCommmit(String commitID, String fileName){
+
+        // TODO :: find commit on this branch only?
+        String currPtr = activeBranch_.getBranchPtr_();
+        boolean found = false;
+
+        while (currPtr != null){
+            Commit commit = Commit.readCommitFromDisk(currPtr);
+
+            if (commit.getThisCommitID_().equals(commitID)){
+                found = true;
+                break;
+            }
+
+            currPtr = commit.getParentCommitID_();
+        }
+
+        if (!found){
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+
+        Commit commit = Commit.readCommitFromDisk(currPtr);
+
+        if (!commit.getFileToBlobIDMap_().containsKey(fileName)){
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+
+        // overwrite file in working dir if control reaches here
+        overwriteWorkingDir(commit, fileName);
+    }
+
+    public void checkoutBranch(String branchName){
+
+        if (!branchNameToBranch_.containsKey(branchName)){
+            System.out.println("No such branch exists.");
+            return;
+        }
+
+        if (branchName.equals(activeBranch_.getBranchName_())){
+            System.out.println("No need to checkout the current branch.");
+            return;
+        }
+
+        // TODO :: checkout from head or branchPtr?
+        Branch checkoutBranch = branchNameToBranch_.get(branchName);
+        Commit checkoutCommit = Commit.readCommitFromDisk(checkoutBranch.getHeadCommit_());
+
+        Commit currCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
+
+        // TODO :: untracked files (2 conditions stated in reading)
+        List<String> untrackedFiles = new ArrayList<>();
+        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+
+        for (String file : workingDirFiles){
+            if (!stagingArea_.getFileToAdd_().contains(file) && !currCommit.getFileToBlobIDMap_().containsKey(file)
+            || stagingArea_.getFileToRemove_().contains(file)){
+                untrackedFiles.add(file);
+            }
+        }
+
+        for (String untrackedFile : untrackedFiles){
+            if (checkoutCommit.getFileToBlobIDMap_().containsKey(untrackedFile)){
+                System.out.println("There is an untracked file in the way; delete it or add it first.");
+                return;
+            }
+        }
+
+        for (String fileName : checkoutCommit.getFileToBlobIDMap_().keySet()){
+            overwriteWorkingDir(checkoutCommit, fileName);
+        }
+
+        // delete files tracked by current branch but not present in checkoutBranch
+        for (String fileName : currCommit.getFileToBlobIDMap_().keySet()){
+
+            if (!checkoutCommit.getFileToBlobIDMap_().containsKey(fileName)){
+                File file = new File(fileName);
+                file.delete();
+            }
+        }
+
+        // clear staging area
+        stagingArea_ = new StagingArea(checkoutCommit.getFileToBlobIDMap_());
+
+        // reset pointer for branch
+        setActiveBranch_(checkoutBranch);
+    }
 }
