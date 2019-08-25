@@ -4,13 +4,13 @@ import java.io.Serializable;
 
 public class Branch implements Serializable {
 
-    String branchName_;
+    private String branchName_;
 
     // hash of the latest commit on this branch
-    String headCommit_;
+    private String headCommit_;
 
     // the pointer to start of branch (from latest commit)
-    String branchPtr_;
+    private String branchPtr_;
 
     // both head and brac
     public Branch(String branchName, String headCommit){

@@ -1,8 +1,5 @@
 package gitlet;
 
-import com.sun.scenario.effect.Merge;
-
-import javax.swing.text.html.BlockView;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -40,7 +37,6 @@ public class CommitTree implements Serializable {
         return Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
     }
 
-
     private boolean checkPrefixMatch(String prefix, String commitID){
 
         // prefix must be less than 40 characters (user input)
@@ -50,6 +46,139 @@ public class CommitTree implements Serializable {
             return commitPrefix.equals(prefix);
         }
         return false;
+    }
+
+    private void logPrinter(String commitHash){
+        while (commitHash != null){
+
+            Commit currCommit = Commit.readCommitFromDisk(commitHash);
+            System.out.println("===");
+            System.out.println("Commit " + currCommit.getThisCommitID_());
+            System.out.println(currCommit.getTimestamp_());
+            System.out.println(currCommit.getCommitMessage_());
+            System.out.println();
+
+            commitHash = currCommit.getParentCommitID_();
+        }
+    }
+
+    // pass the commit object and fileName to overwrite in current dir
+    // Assume: presence of file in working dir
+    private void overwriteWorkingDir(Commit commit, String fileName){
+        Blob blob = commit.getBlob(fileName);
+
+        try {
+            File file = new File(fileName);
+            // false to overwrite
+            FileOutputStream fileStream = new FileOutputStream(file, false);
+
+            byte[] blobContents = blob.getContentAsBytes_();
+            fileStream.write(blobContents);
+            fileStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean mergeFailureCases(String branchName){
+
+        if (!stagingArea_.getFileToAdd_().isEmpty() || !stagingArea_.getFileToRemove_().isEmpty()){
+            System.out.println("You have uncommitted changes.");
+            return true;
+        }
+
+        if (!branchNameToBranch_.containsKey(branchName)){
+            System.out.println("A branch with that name does not exist.");
+            return true;
+        }
+
+        if (activeBranch_.getBranchName_().equals(branchName)){
+            System.out.println("Cannot merge a branch with itself.");
+            return true;
+        }
+
+        // check for un-tracked files
+        Branch mergeBranch = branchNameToBranch_.get(branchName);
+        Commit mergeCommit = Commit.readCommitFromDisk(mergeBranch.getHeadCommit_());
+
+        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+        for (String file : workingDirFiles){
+
+            if (!stagingArea_.getPrevCommitFileToBlobIDMap().containsKey(file) && mergeCommit.getFileToBlobIDMap_().containsKey(file)){
+                System.out.println("There is an untracked file in the way; delete it or add it first.");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    // find the earliest common ancestor in the CommitTree with givenBranch
+    // and the active branch
+    private Commit getSplitNode(String givenBranch){
+
+        Set<String> commitIDSet = new HashSet<>();
+
+        // start search from the branch pointer
+        String branchPtr = activeBranch_.getBranchPtr_();
+
+        while (branchPtr != null){
+            Commit commit = Commit.readCommitFromDisk(branchPtr);
+            commitIDSet.add(commit.getThisCommitID_());
+
+            branchPtr = commit.getParentCommitID_();
+        }
+
+        String givenBranchPtr = branchNameToBranch_.get(givenBranch).getBranchPtr_();
+
+        while (givenBranchPtr != null){
+            if (commitIDSet.contains(givenBranchPtr)){
+                break;
+            }
+
+            Commit commit = Commit.readCommitFromDisk(givenBranchPtr);
+            givenBranchPtr = commit.getParentCommitID_();
+        }
+
+        return Commit.readCommitFromDisk(givenBranchPtr);
+    }
+
+    private String getBlobID(String fileName, Commit node){
+        return node.getFileToBlobIDMap_().get(fileName);
+    }
+
+    private boolean isFilePresent(String fileName, Commit node){
+        return node.getFileToBlobIDMap_().containsKey(fileName);
+    }
+
+
+    // write the contents of the current and merge branch with merge conflict separators
+    private void mergeConflictLogger(Blob currBlob, Blob mergeBlob, String file){
+
+        byte[] currBranchContent = currBlob != null ? currBlob.getContentAsBytes_() : new byte[0];
+        byte[] mergeBranchContent = mergeBlob != null ? mergeBlob.getContentAsBytes_() : new byte[0];
+
+        byte[] firstSeparator = "<<<<<<< HEAD\n".getBytes();
+        byte[] secondSeparator = "=======\n".getBytes();
+        byte[] thirdSeparator = ">>>>>>>\n".getBytes();
+
+        byte[] allByteArray = new byte[firstSeparator.length + currBranchContent.length + secondSeparator.length + mergeBranchContent.length + thirdSeparator.length];
+
+        ByteBuffer buff = ByteBuffer.wrap(allByteArray);
+        buff.put(firstSeparator);
+        buff.put(currBranchContent);
+        buff.put(secondSeparator);
+        buff.put(mergeBranchContent);
+        buff.put(thirdSeparator);
+
+        byte[] combined = buff.array();
+
+        // write merge conflict output to conflict file
+        File fileObj = new File(file);
+        Utils.writeContents(fileObj, combined);
     }
 
     // called at initialization only
@@ -79,7 +208,7 @@ public class CommitTree implements Serializable {
             return;
         }
 
-        // remove from staging area: file un-tracked from next commit
+        // handle case when file is add after being staged for un-tracking
         stagingArea_.getFileToRemove_().remove(fileName);
 
         try {
@@ -88,6 +217,8 @@ public class CommitTree implements Serializable {
             String fileHash = Utils.sha1(fileToAddBytes);
 
             Commit currCommit = getHeadCommit();
+            // use the blobID (hash) for the argument file
+            // to check if file content is same
             Blob currBlob = currCommit.blobExist(fileHash);
 
             // do not add file if identical data and filename
@@ -141,7 +272,6 @@ public class CommitTree implements Serializable {
             // TODO :: in detached head state and a commit is made
             activeBranch_.setHeadCommit_(commit.getThisCommitID_());
         }
-
     }
 
     public void removeFile(String fileName){
@@ -160,21 +290,6 @@ public class CommitTree implements Serializable {
         }
 
         stagingArea_.getFileToAdd_().remove(fileName);
-    }
-
-
-    private void logPrinter(String commitHash){
-        while (commitHash != null){
-
-            Commit currCommit = Commit.readCommitFromDisk(commitHash);
-            System.out.println("===");
-            System.out.println("Commit " + currCommit.getThisCommitID_());
-            System.out.println(currCommit.getTimestamp_());
-            System.out.println(currCommit.getCommitMessage_());
-            System.out.println();
-
-            commitHash = currCommit.getParentCommitID_();
-        }
     }
 
     public void log(){
@@ -258,26 +373,6 @@ public class CommitTree implements Serializable {
     }
 
 
-    // pass the commit object and fileName to overwrite in current dir
-    // function does not check presence of file in working dir
-    private void overwriteWorkingDir(Commit commit, String fileName){
-        Blob blob = commit.getBlob(fileName);
-
-        try {
-            File file = new File(fileName);
-            // false to overwrite
-            FileOutputStream fileStream = new FileOutputStream(file, false);
-
-            byte[] blobContents = blob.getContentAsBytes_();
-            fileStream.write(blobContents);
-            fileStream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void checkoutFile(String fileName){
 
         // checkout file from the head commit
@@ -294,7 +389,6 @@ public class CommitTree implements Serializable {
     public void checkoutFilePrevCommmit(String commitID, String fileName){
 
         // search all branches to find commitID
-
         boolean found = false;
         String currPtr = null;
 
@@ -330,7 +424,7 @@ public class CommitTree implements Serializable {
             return;
         }
 
-        // overwrite file in working dir if control reaches here
+        // overwrite file in working dir
         overwriteWorkingDir(commit, fileName);
     }
 
@@ -351,11 +445,11 @@ public class CommitTree implements Serializable {
         Branch checkoutBranch = branchNameToBranch_.get(branchName);
         Commit checkoutCommit = Commit.readCommitFromDisk(checkoutBranch.getHeadCommit_());
 
-        // handle untracked files
+        // handle un-tracked files
         List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
         for (String file : workingDirFiles){
 
-            // the untracked file would be overwritten by checkout
+            // the un-tracked file would be overwritten by checkout
             if (!stagingArea_.getPrevCommitFileToBlobIDMap().containsKey(file) && checkoutCommit.getFileToBlobIDMap_().containsKey(file)){
                 System.out.println("There is an untracked file in the way; delete it or add it first.");
                 return;
@@ -410,7 +504,6 @@ public class CommitTree implements Serializable {
     }
 
 
-    // on the current branch
     public void reset(String commitID){
 
         // search all branches for commitID
@@ -471,106 +564,6 @@ public class CommitTree implements Serializable {
         activeBranch_.setHeadCommit_(resetCommit.getThisCommitID_());
     }
 
-
-    // true for failure
-    private boolean mergeFailureCases(String branchName){
-
-        if (!stagingArea_.getFileToAdd_().isEmpty() || !stagingArea_.getFileToRemove_().isEmpty()){
-            System.out.println("You have uncommitted changes.");
-            return true;
-        }
-
-        if (!branchNameToBranch_.containsKey(branchName)){
-            System.out.println("A branch with that name does not exist.");
-            return true;
-        }
-
-        if (activeBranch_.getBranchName_().equals(branchName)){
-            System.out.println("Cannot merge a branch with itself.");
-            return true;
-        }
-
-
-        // deal with untracked files
-        Branch mergeBranch = branchNameToBranch_.get(branchName);
-        Commit mergeCommit = Commit.readCommitFromDisk(mergeBranch.getHeadCommit_());
-
-        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
-        for (String file : workingDirFiles){
-
-            if (!stagingArea_.getPrevCommitFileToBlobIDMap().containsKey(file) && mergeCommit.getFileToBlobIDMap_().containsKey(file)){
-                System.out.println("There is an untracked file in the way; delete it or add it first.");
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // TODO :: dealing with happy path rn
-    private Commit getSplitNode(String givenBranch){
-
-        Set<String> commitIDSet = new HashSet<>();
-
-        // start from the branch pointers
-        String branchPtr = activeBranch_.getBranchPtr_();
-
-        while (branchPtr != null){
-            Commit commit = Commit.readCommitFromDisk(branchPtr);
-            commitIDSet.add(commit.getThisCommitID_());
-
-            branchPtr = commit.getParentCommitID_();
-        }
-
-        String givenBranchPtr = branchNameToBranch_.get(givenBranch).getBranchPtr_();
-
-        while (givenBranchPtr != null){
-            if (commitIDSet.contains(givenBranchPtr)){
-                break;
-            }
-
-            Commit commit = Commit.readCommitFromDisk(givenBranchPtr);
-            givenBranchPtr = commit.getParentCommitID_();
-        }
-
-        return Commit.readCommitFromDisk(givenBranchPtr);
-    }
-
-    private String getBlobID(String fileName, Commit node){
-        return node.getFileToBlobIDMap_().get(fileName);
-    }
-
-    private boolean isFilePresent(String fileName, Commit node){
-        return node.getFileToBlobIDMap_().containsKey(fileName);
-    }
-
-
-    // write the contents of the current and merge branch with merge conflict separators
-    private void mergeConflictLogger(Blob currBlob, Blob mergeBlob, String file){
-
-        byte[] currBranchContent = currBlob != null ? currBlob.getContentAsBytes_() : new byte[0];
-        byte[] mergeBranchContent = mergeBlob != null ? mergeBlob.getContentAsBytes_() : new byte[0];
-
-        byte[] firstSeparator = "<<<<<<< HEAD\n".getBytes();
-        byte[] secondSeparator = "=======\n".getBytes();
-        byte[] thirdSeparator = ">>>>>>>\n".getBytes();
-
-        byte[] allByteArray = new byte[firstSeparator.length + currBranchContent.length + secondSeparator.length + mergeBranchContent.length + thirdSeparator.length];
-
-        ByteBuffer buff = ByteBuffer.wrap(allByteArray);
-        buff.put(firstSeparator);
-        buff.put(currBranchContent);
-        buff.put(secondSeparator);
-        buff.put(mergeBranchContent);
-        buff.put(thirdSeparator);
-
-        byte[] combined = buff.array();
-
-        // write merge conflict output to conflict file
-        File fileObj = new File(file);
-        Utils.writeContents(fileObj, combined);
-    }
-
     public void merge(String branchName){
 
         // deal with failure cases first
@@ -581,10 +574,7 @@ public class CommitTree implements Serializable {
         }
 
         Commit splitNode = getSplitNode(branchName);
-
         Commit currNode = Commit.readCommitFromDisk(activeBranch_.getBranchPtr_());
-
-        // working with the branch pointer
         String mergeBranchPtr = branchNameToBranch_.get(branchName).getBranchPtr_();
         Commit mergeNode = Commit.readCommitFromDisk(mergeBranchPtr);
 
@@ -602,7 +592,7 @@ public class CommitTree implements Serializable {
             return;
         }
 
-        // step 1: since split point, modified in given branch but not modified in current branch
+        // since split point, modified in given branch but not modified in current branch
         for (String file : currNode.getFileToBlobIDMap_().keySet()){
 
             if (!isFilePresent(file, splitNode) || !isFilePresent(file, mergeNode)){
@@ -622,7 +612,7 @@ public class CommitTree implements Serializable {
         }
 
 
-        // step 4: not present at split point, only present in given branch
+        // not present at split point, only present in given branch
         // checkout (from given) and stage
         for (String file : mergeNode.getFileToBlobIDMap_().keySet()){
 
@@ -633,7 +623,7 @@ public class CommitTree implements Serializable {
             }
         }
 
-        // step 5: present in split, unmodified in current, absent in given branch
+        // present in split, unmodified in current, absent in given branch
         // removed (and un-tracked)
         for (String file : splitNode.getFileToBlobIDMap_().keySet()){
 
@@ -666,7 +656,7 @@ public class CommitTree implements Serializable {
 
                 mergeConflictLogger(currBlob, mergeBlob, file);
 
-                // a conflict caused by a file changed in one and removed in the other.
+                // a conflict caused by a file changed in one and removed in the other
                 // split node helps identify whether a file was removed from either branch
             } else if (splitNode.getFileToBlobIDMap_().containsKey(file) && !mergeNode.getFileToBlobIDMap_().containsKey(file) && currNode.getFileToBlobIDMap_().containsKey(file) && !Blob.isFileSame(blobIDSplit, blobIDCurr)){
 
@@ -688,17 +678,3 @@ public class CommitTree implements Serializable {
         this.commit(message);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

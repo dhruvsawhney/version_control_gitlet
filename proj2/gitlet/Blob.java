@@ -1,14 +1,22 @@
 package gitlet;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Blob implements Serializable {
+
+    private String fileName_;
+
+    private byte[] contentAsBytes_;
+
+    private String contentHash_;
+
+    public Blob(String fileName){
+        fileName_ = fileName;
+        contentAsBytes_ = setContentAsBytes_();
+        contentHash_ = setContentHash_();
+    }
 
     public String getFileName_() {
         return fileName_;
@@ -19,23 +27,14 @@ public class Blob implements Serializable {
     }
 
 
-    String fileName_;
-
-    byte[] contentAsBytes_;
-
-    String contentHash_;
-
-    public Blob(String fileName){
-        fileName_ = fileName;
-        contentAsBytes_ = setContentAsBytes_();
-        contentHash_ = setContentHash_();
-    }
-
     public byte[] setContentAsBytes_() {
 
         return Utils.readContents(new File(fileName_));
     }
 
+    public byte[] getContentAsBytes_() {
+        return contentAsBytes_;
+    }
 
     // create hash based on the content of the file (as byte arr)
     public String setContentHash_() {
@@ -49,11 +48,6 @@ public class Blob implements Serializable {
         }
         String fileHash = Utils.sha1(fileToAddBytes);
         return fileHash;
-    }
-
-
-    public byte[] getContentAsBytes_() {
-        return contentAsBytes_;
     }
 
     // write commit object to disk

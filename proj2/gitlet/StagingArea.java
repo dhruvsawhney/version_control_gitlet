@@ -7,15 +7,12 @@ import java.util.Set;
 
 public class StagingArea implements Serializable {
 
-    // newStaged, newRemoved, stagedFiles (from previous commit)
+    private Set<String> filesToAdd_;
+    private Set<String> filesToRemove_;
+    // file-name to blobID
+    private Map<String, String> prevCommitFileToBlobIDMap;
 
-    Set<String> filesToAdd_;
-    Set<String> filesToRemove_;
-
-    // fileName to blobID
-    Map<String, String> prevCommitFileToBlobIDMap;
-
-    // TODO :: change this mapping input
+    // use the mapping from the previous commit
     public StagingArea(Map<String, String> prevFileToBlobMap){
         filesToAdd_ = new HashSet<>();
         filesToRemove_ = new HashSet<>();

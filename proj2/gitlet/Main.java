@@ -3,7 +3,7 @@ package gitlet;
 import java.io.*;
 
 /* Driver class for Gitlet, the tiny stupid version-control system.
-   @author
+   @author Dhruv Sawhney
 */
 public class Main {
 
@@ -109,7 +109,6 @@ public class Main {
 
             if (!args[1].equals("--")){
                 System.out.println("Incorrect operands.");
-//                System.exit(1);
                 return;
             }
             this.getTree_().checkoutFile(args[2]);
@@ -117,7 +116,6 @@ public class Main {
 
             if (!args[2].equals("--")){
                 System.out.println("Incorrect operands.");
-//                System.exit(1);
                 return;
             }
 
@@ -125,7 +123,6 @@ public class Main {
 
         } else if (args.length > 4){
             System.out.println("Incorrect operands.");
-//            System.exit(1);
             return;
         }
     }

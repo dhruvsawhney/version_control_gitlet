@@ -11,13 +11,13 @@ public class Commit implements Serializable {
 
     private static final DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    String commitMessage_;
-    String parentCommitID_;
-    String thisCommitID_;
-    String timestamp_;
+    private String commitMessage_;
+    private String parentCommitID_;
+    private String thisCommitID_;
+    private String timestamp_;
 
-    // fileName to blobID (hash)
-    Map<String, String> fileToBlobIDMap_;
+    // file-name to blobID (hash)
+    private Map<String, String> fileToBlobIDMap_;
 
 
     public Commit(String commitMessage, String parentCommitID){
@@ -39,9 +39,7 @@ public class Commit implements Serializable {
         Date date = new Date();
         timestamp_ = sdf.format(date);
 
-        // TODO :: is the deep copy needed?
         fileToBlobIDMap_ = new HashMap<>(prevCommitFileToBlobMap);
-
         thisCommitID_ = getHash();
     }
 
