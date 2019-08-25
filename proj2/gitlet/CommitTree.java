@@ -115,9 +115,12 @@ public class CommitTree implements Serializable {
         Commit commit = new Commit(commitMessage, getHeadCommit().getThisCommitID_(), stagingArea_.getPrevCommitFileToBlobIDMap());
         commit.writeCommitToDisk();
 
-        // clear staging area
-        Map<String, String> prevCommitFileToBlob = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_()).getFileToBlobIDMap_();
+        // clear the staging area. The tracking files map will now be this commit
+        Map<String, String> prevCommitFileToBlob = commit.getFileToBlobIDMap_();
         stagingArea_ = new StagingArea(prevCommitFileToBlob);
+
+//        Map<String, String> prevCommitFileToBlob = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_()).getFileToBlobIDMap_();
+//        stagingArea_ = new StagingArea(prevCommitFileToBlob);
 
         // change pointers for commit on active branch
         if (activeBranch_.getBranchPtr_().equals(activeBranch_.getHeadCommit_())){
@@ -355,13 +358,18 @@ public class CommitTree implements Serializable {
         Branch checkoutBranch = branchNameToBranch_.get(branchName);
         Commit checkoutCommit = Commit.readCommitFromDisk(checkoutBranch.getHeadCommit_());
 
-        List<String> untrackedFiles = getUntrackedFiles();
-        for (String untrackedFile : untrackedFiles){
-            if (checkoutCommit.getFileToBlobIDMap_().containsKey(untrackedFile)){
+        // handle untracked files
+        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+        for (String file : workingDirFiles){
+
+            // the untracked file would be overwritten by checkout
+            if (!stagingArea_.getPrevCommitFileToBlobIDMap().containsKey(file) && checkoutCommit.getFileToBlobIDMap_().containsKey(file)){
                 System.out.println("There is an untracked file in the way; delete it or add it first.");
                 return;
             }
         }
+
+
 
         for (String fileName : checkoutCommit.getFileToBlobIDMap_().keySet()){
             overwriteWorkingDir(checkoutCommit, fileName);
@@ -434,15 +442,17 @@ public class CommitTree implements Serializable {
         }
 
         Commit resetCommit = Commit.readCommitFromDisk(branchCommit);
-        // untracked Files on this branch
-        List<String> untrackedFiles = getUntrackedFiles();
 
-//        for (String file : untrackedFiles){
-//            if (resetCommit.getFileToBlobIDMap_().containsKey(file)){
-//                System.out.println("There is an untracked file in the way; delete it or add it first.");
-//                return;
-//            }
-//        }
+        // handle untracked files
+        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+        for (String file : workingDirFiles){
+
+            // the untracked file would be overwritten by reset commit
+            if (!stagingArea_.getPrevCommitFileToBlobIDMap().containsKey(file) && resetCommit.getFileToBlobIDMap_().containsKey(file)){
+                System.out.println("There is an untracked file in the way; delete it or add it first.");
+                return;
+            }
+        }
 
         // delete files tracked by current commit, but not by reset commit
         for (String file : getHeadCommit().getFileToBlobIDMap_().keySet()){
@@ -451,6 +461,9 @@ public class CommitTree implements Serializable {
                 Utils.restrictedDelete(file);
             }
         }
+
+        // clear the staging area. Set the tracking files to resetCommit's tracking files
+        stagingArea_ = new StagingArea(resetCommit.getFileToBlobIDMap_());
 
         // reset the head commit
         activeBranch_.setHeadCommit_(resetCommit.getThisCommitID_());
