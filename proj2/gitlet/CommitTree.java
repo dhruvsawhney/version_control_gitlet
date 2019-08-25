@@ -31,13 +31,12 @@ public class CommitTree implements Serializable {
         stagingArea_.setPrevCommitFileToBlobIDMap(prevFileToBlobMap);
     }
 
-    // return the head commit on the active branch
+    // head commit on the active branch
     private Commit getHeadCommit(){
         return Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
     }
 
 
-    // check if the prefix matches the id
     private boolean checkPrefixMatch(String prefix, String commitID){
 
         // prefix must be less than 40 characters (user input)
@@ -79,17 +78,15 @@ public class CommitTree implements Serializable {
         // remove from staging area: file un-tracked from next commit
         stagingArea_.getFileToRemove_().remove(fileName);
 
-
         try {
             File fileToAdd = new File(fileName);
             byte[] fileToAddBytes = Files.readAllBytes(fileToAdd.toPath());
             String fileHash = Utils.sha1(fileToAddBytes);
 
-
             Commit currCommit = getHeadCommit();
             Blob currBlob = currCommit.blobExist(fileHash);
 
-            // do not add if identical data and filename
+            // do not add file if identical data and filename
             if (currBlob != null && currBlob.getFileName_().equals(fileToAdd.getName())){
                 return;
             }
@@ -128,12 +125,9 @@ public class CommitTree implements Serializable {
         Commit commit = new Commit(commitMessage, getHeadCommit().getThisCommitID_(), stagingArea_.getPrevCommitFileToBlobIDMap());
         commit.writeCommitToDisk();
 
-        // clear the staging area. The tracking files map will now be this commit
+        // clear the staging area. The tracking files map will correspond to commit above
         Map<String, String> prevCommitFileToBlob = commit.getFileToBlobIDMap_();
         stagingArea_ = new StagingArea(prevCommitFileToBlob);
-
-//        Map<String, String> prevCommitFileToBlob = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_()).getFileToBlobIDMap_();
-//        stagingArea_ = new StagingArea(prevCommitFileToBlob);
 
         // change pointers for commit on active branch
         if (activeBranch_.getBranchPtr_().equals(activeBranch_.getHeadCommit_())){
@@ -150,7 +144,6 @@ public class CommitTree implements Serializable {
 
         Commit headCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
 
-        // neither staged nor tracked by current commit
         if (!stagingArea_.getFileToAdd_().contains(fileName) && !headCommit.getFileToBlobIDMap_().containsKey(fileName)){
             System.out.println("No reason to remove the file.");
             return;
@@ -159,11 +152,9 @@ public class CommitTree implements Serializable {
         if (headCommit.getFileToBlobIDMap_().containsKey(fileName)){
 
             Utils.restrictedDelete(fileName);
-            //mark un-track
             stagingArea_.getFileToRemove_().add(fileName);
         }
 
-        // in the case not on head commit but said to track
         stagingArea_.getFileToAdd_().remove(fileName);
     }
 
@@ -243,14 +234,11 @@ public class CommitTree implements Serializable {
             }
         }
 
-
         System.out.println();
         System.out.println("=== Staged Files ===");
         for (String stagedFile : stagedFiles){
             System.out.println(stagedFile);
         }
-
-
 
         System.out.println();
         System.out.println("=== Removed Files ===");
@@ -267,7 +255,7 @@ public class CommitTree implements Serializable {
 
 
     // pass the commit object and fileName to overwrite in current dir
-    // Note: does not check presence of file in working dir
+    // function does not check presence of file in working dir
     private void overwriteWorkingDir(Commit commit, String fileName){
         Blob blob = commit.getBlob(fileName);
 
@@ -333,27 +321,6 @@ public class CommitTree implements Serializable {
         overwriteWorkingDir(commit, fileName);
     }
 
-    // with respect to the current commit
-    private List<String> getUntrackedFiles(){
-
-        Commit currCommit = Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
-
-        // Un-tracked file:  neither staged for addition nor tracked
-        // or staged for removal, but then re-added without gitlet’s knowledge
-        List<String> untrackedFiles = new ArrayList<>();
-        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
-
-        for (String file : workingDirFiles){
-            // !stagingArea_.getFileToAdd_().contains(file) (&& with first condition)
-            if (!currCommit.getFileToBlobIDMap_().containsKey(file)
-                    || stagingArea_.getFileToRemove_().contains(file)){
-                untrackedFiles.add(file);
-            }
-        }
-
-        return untrackedFiles;
-    }
-
     public void checkoutBranch(String branchName){
 
         if (!branchNameToBranch_.containsKey(branchName)){
@@ -381,8 +348,6 @@ public class CommitTree implements Serializable {
                 return;
             }
         }
-
-
 
         for (String fileName : checkoutCommit.getFileToBlobIDMap_().keySet()){
             overwriteWorkingDir(checkoutCommit, fileName);
@@ -435,8 +400,7 @@ public class CommitTree implements Serializable {
     // on the current branch
     public void reset(String commitID){
 
-        // search all branches
-
+        // search all branches for commitID
         boolean foundCommit = false;
         String resetCommitID = null;
 
