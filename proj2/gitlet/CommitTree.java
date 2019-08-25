@@ -575,7 +575,7 @@ public class CommitTree implements Serializable {
             return;
         }
 
-        // step 1
+        // step 1: since split point, modified in given branch but not modified in current branch
         for (String file : currNode.getFileToBlobIDMap_().keySet()){
 
             if (!isFilePresent(file, splitNode) || !isFilePresent(file, mergeNode)){
@@ -595,21 +595,19 @@ public class CommitTree implements Serializable {
         }
 
 
-        // step 4
+        // step 4: not present at split point, only present in given branch
+        // checkout (from given) and stage
         for (String file : mergeNode.getFileToBlobIDMap_().keySet()){
 
             if (!isFilePresent(file, splitNode) && !isFilePresent(file, currNode) && isFilePresent(file, mergeNode)){
-//                System.out.println("FILE IS: " + file);
+
                 this.checkoutFilePrevCommmit(mergeNode.getThisCommitID_(), file);
                 stagingArea_.getFileToAdd_().add(file);
-
-//                List<String> wdFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
-//                System.out.println("K.TXT PRESENT: " + wdFiles.contains("k.txt"));
             }
         }
 
-        // step 5
-
+        // step 5: present in split, unmodified in current, absent in given branch
+        // removed (and un-tracked)
         for (String file : splitNode.getFileToBlobIDMap_().keySet()){
 
             String blobIDSplit = getBlobID(file, splitNode);
@@ -617,13 +615,11 @@ public class CommitTree implements Serializable {
 
             if (blobIDCurr != null && Blob.isFileSame(blobIDCurr, blobIDSplit) && !isFilePresent(file, mergeNode)){
 
-                // remove and untrack
+                // remove and un-track
                 Utils.restrictedDelete(file);
                 stagingArea_.getFileToRemove_().add(file);
             }
         }
-
-
 
         boolean mergeConflict = false;
 
@@ -632,7 +628,7 @@ public class CommitTree implements Serializable {
             String blobIDCurr = getBlobID(file, currNode);
             String blobIDMerge = getBlobID(file, mergeNode);
 
-            // file in conflict
+            // conflict if file not same in current and given branches
             if (mergeNode.getFileToBlobIDMap_().containsKey(file) && !Blob.isFileSame(blobIDCurr, blobIDMerge)){
 
                 mergeConflict = true;
@@ -666,10 +662,12 @@ public class CommitTree implements Serializable {
 
         if (mergeConflict){
             System.out.println("Encountered a merge conflict.");
-        } else{
-            String message = String.format("Merged %s with %s.", activeBranch_.getBranchName_(), branchName);
-            this.commit(message);
+            return;
         }
+
+        String message = String.format("Merged %s with %s.", activeBranch_.getBranchName_(), branchName);
+        this.commit(message);
+
 
 //        StringBuilder sb = new StringBuilder();
 //        List<String> wdFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
