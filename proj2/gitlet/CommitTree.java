@@ -544,6 +544,33 @@ public class CommitTree implements Serializable {
         return node.getFileToBlobIDMap_().containsKey(fileName);
     }
 
+
+    // write the contents of the current and merge branch with merge conflict separators
+    private void mergeConflictLogger(Blob currBlob, Blob mergeBlob, String file){
+
+        byte[] currBranchContent = currBlob != null ? currBlob.getContentAsBytes_() : new byte[0];
+        byte[] mergeBranchContent = mergeBlob != null ? mergeBlob.getContentAsBytes_() : new byte[0];
+
+        byte[] firstSeparator = "<<<<<<< HEAD\n".getBytes();
+        byte[] secondSeparator = "=======\n".getBytes();
+        byte[] thirdSeparator = ">>>>>>>\n".getBytes();
+
+        byte[] allByteArray = new byte[firstSeparator.length + currBranchContent.length + secondSeparator.length + mergeBranchContent.length + thirdSeparator.length];
+
+        ByteBuffer buff = ByteBuffer.wrap(allByteArray);
+        buff.put(firstSeparator);
+        buff.put(currBranchContent);
+        buff.put(secondSeparator);
+        buff.put(mergeBranchContent);
+        buff.put(thirdSeparator);
+
+        byte[] combined = buff.array();
+
+        // write merge conflict output to conflict file
+        File fileObj = new File(file);
+        Utils.writeContents(fileObj, combined);
+    }
+
     public void merge(String branchName){
 
         // deal with failure cases first
@@ -568,7 +595,6 @@ public class CommitTree implements Serializable {
 
         if (splitNode.getThisCommitID_().equals(currNode.getThisCommitID_())){
 
-            // some work here
             activeBranch_.setBranchPtr_(mergeBranchPtr);
             activeBranch_.setHeadCommit_(mergeBranchPtr);
 
@@ -638,28 +664,7 @@ public class CommitTree implements Serializable {
                 Blob currBlob = Blob.readBlobFromDisk(blobIDCurr);
                 Blob mergeBlob = Blob.readBlobFromDisk(blobIDMerge);
 
-                byte[] firstSeparator = "<<<<<<< HEAD\n".getBytes();
-                byte[] currBranchContent = currBlob.getContentAsBytes_();
-                byte[] secondSeparator = "=======\n".getBytes();
-                byte[] mergeBranchContent = mergeBlob.getContentAsBytes_();
-                byte[] thirdSeparator = ">>>>>>>\n".getBytes();
-
-
-                byte[] allByteArray = new byte[firstSeparator.length + currBranchContent.length + secondSeparator.length + mergeBranchContent.length + thirdSeparator.length];
-
-                ByteBuffer buff = ByteBuffer.wrap(allByteArray);
-                buff.put(firstSeparator);
-                buff.put(currBranchContent);
-                buff.put(secondSeparator);
-                buff.put(mergeBranchContent);
-                buff.put(thirdSeparator);
-
-                byte[] combined = buff.array();
-
-                // write merge conflict output to conflict file
-                File fileObj = new File(file);
-                Utils.writeContents(fileObj, combined);
-
+                mergeConflictLogger(currBlob, mergeBlob, file);
 
                 // a conflict caused by a file changed in one and removed in the other.
                 // split node helps identify whether a file was removed from either branch
@@ -670,27 +675,7 @@ public class CommitTree implements Serializable {
                 Blob currBlob = currNode.getFileToBlobIDMap_().containsKey(file) ? Blob.readBlobFromDisk(blobIDCurr) : null;
                 Blob mergeBlob = mergeNode.getFileToBlobIDMap_().containsKey(file) ? Blob.readBlobFromDisk(blobIDMerge) : null;
 
-                byte[] currBranchContent = currBlob != null ? currBlob.getContentAsBytes_() : new byte[0];
-                byte[] mergeBranchContent = mergeBlob != null ? mergeBlob.getContentAsBytes_() : new byte[0];
-
-                byte[] firstSeparator = "<<<<<<< HEAD\n".getBytes();
-                byte[] secondSeparator = "=======\n".getBytes();
-                byte[] thirdSeparator = ">>>>>>>\n".getBytes();
-
-                byte[] allByteArray = new byte[firstSeparator.length + currBranchContent.length + secondSeparator.length + mergeBranchContent.length + thirdSeparator.length];
-
-                ByteBuffer buff = ByteBuffer.wrap(allByteArray);
-                buff.put(firstSeparator);
-                buff.put(currBranchContent);
-                buff.put(secondSeparator);
-                buff.put(mergeBranchContent);
-                buff.put(thirdSeparator);
-
-                byte[] combined = buff.array();
-
-                // write merge conflict output to conflict file
-                File fileObj = new File(file);
-                Utils.writeContents(fileObj, combined);
+                mergeConflictLogger(currBlob, mergeBlob, file);
             }
         }
 
@@ -701,14 +686,6 @@ public class CommitTree implements Serializable {
 
         String message = String.format("Merged %s with %s.", activeBranch_.getBranchName_(), branchName);
         this.commit(message);
-
-//        StringBuilder sb = new StringBuilder();
-//        List<String> wdFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
-//        for (String file : wdFiles){
-//            sb.append(file);
-//            sb.append("     ");
-//        }
-//        System.out.println(new String(sb));
     }
 }
 
