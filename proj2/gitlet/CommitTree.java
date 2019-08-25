@@ -1,6 +1,9 @@
 package gitlet;
 
+import com.sun.scenario.effect.Merge;
+
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -522,6 +525,14 @@ public class CommitTree implements Serializable {
         return Commit.readCommitFromDisk(givenBranchPtr);
     }
 
+    private String getBlobID(String fileName, Commit node){
+        return node.getFileToBlobIDMap_().get(fileName);
+    }
+
+    private boolean isFilePresent(String fileName, Commit node){
+        return node.getFileToBlobIDMap_().containsKey(fileName);
+    }
+
     public void merge(String branchName){
 
         // deal with failure cases first
@@ -531,7 +542,136 @@ public class CommitTree implements Serializable {
             return;
         }
 
+        Commit splitNode = getSplitNode(branchName);
+
+        Commit currNode = Commit.readCommitFromDisk(activeBranch_.getBranchPtr_());
+
+        // working with the branch pointer
+        String mergeBranchPtr = branchNameToBranch_.get(branchName).getBranchPtr_();
+        Commit mergeNode = Commit.readCommitFromDisk(mergeBranchPtr);
+
+        if (splitNode.getThisCommitID_().equals(mergeNode.getThisCommitID_())){
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+
+        if (splitNode.getThisCommitID_().equals(currNode.getThisCommitID_())){
+
+            // some work here
+            activeBranch_.setBranchPtr_(mergeBranchPtr);
+            activeBranch_.setHeadCommit_(mergeBranchPtr);
+
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+
+        // TODO :: need to write runtime objects to disk
+
+        // work with respect to the currentNode
+
+        // step 1
+        for (String file : currNode.getFileToBlobIDMap_().keySet()){
+
+            if (!isFilePresent(file, splitNode) || !isFilePresent(file, mergeNode)){
+                continue;
+            }
+
+            String blobIDMerge = getBlobID(file, mergeNode);
+            String blobIDSplit = getBlobID(file, splitNode);
+            String blobIDCurr = getBlobID(file, currNode);
+
+            if (!Blob.isFileSame(blobIDMerge, blobIDSplit) && Blob.isFileSame(blobIDCurr, blobIDSplit)){
+
+                // change object pointers and stage
+                this.checkoutFilePrevCommmit(mergeNode.getThisCommitID_(),file);
+                stagingArea_.getFileToAdd_().add(file);
+            }
+        }
+
+        // step 4
+        for (String file : mergeNode.getFileToBlobIDMap_().keySet()){
+
+            if (!isFilePresent(file, splitNode) && !isFilePresent(file, currNode) && isFilePresent(file, mergeNode)){
+                this.checkoutFilePrevCommmit(mergeNode.getThisCommitID_(), file);
+                stagingArea_.getFileToAdd_().add(file);
+            }
+        }
+
+        // step 5
+
+        for (String file : splitNode.getFileToBlobIDMap_().keySet()){
+
+            String blobIDSplit = getBlobID(file, splitNode);
+            String blobIDCurr = getBlobID(file, currNode);
+
+            if (blobIDCurr != null && Blob.isFileSame(blobIDCurr, blobIDSplit) && !isFilePresent(file, mergeNode)){
+
+                // remove and untrack
+                Utils.restrictedDelete(file);
+                stagingArea_.getFileToRemove_().add(file);
+            }
+        }
 
 
+
+        boolean mergeConflict = false;
+
+        for (String file : currNode.getFileToBlobIDMap_().keySet()){
+
+            String blobIDCurr = getBlobID(file, currNode);
+            String blobIDMerge = getBlobID(file, mergeNode);
+
+            // file in conflict
+            if (mergeNode.getFileToBlobIDMap_().containsKey(file) && !Blob.isFileSame(blobIDCurr, blobIDMerge)){
+
+                mergeConflict = true;
+
+                Blob currBlob = Blob.readBlobFromDisk(blobIDCurr);
+                Blob mergeBlob = Blob.readBlobFromDisk(blobIDMerge);
+
+                byte[] firstSeparator = "<<<<<<< HEAD\n".getBytes();
+                byte[] currBranchContent = currBlob.getContentAsBytes_();
+                byte[] secondSeparator = "=======\n".getBytes();
+                byte[] mergeBranchContent = mergeBlob.getContentAsBytes_();
+                byte[] thirdSeparator = ">>>>>>>\n".getBytes();
+
+
+                byte[] allByteArray = new byte[firstSeparator.length + currBranchContent.length + secondSeparator.length + mergeBranchContent.length + thirdSeparator.length];
+
+                ByteBuffer buff = ByteBuffer.wrap(allByteArray);
+                buff.put(firstSeparator);
+                buff.put(currBranchContent);
+                buff.put(secondSeparator);
+                buff.put(mergeBranchContent);
+                buff.put(thirdSeparator);
+
+                byte[] combined = buff.array();
+
+                // write merge conflict output to conflict file
+                File fileObj = new File(file);
+                Utils.writeContents(fileObj, combined);
+            }
+        }
+
+        if (mergeConflict){
+            System.out.println("Encountered a merge conflict.");
+            return;
+        }
+
+        System.out.println(String.format("Merged %s with %s.", activeBranch_.getBranchName_(), branchName));
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

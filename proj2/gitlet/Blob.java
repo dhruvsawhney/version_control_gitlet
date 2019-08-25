@@ -1,8 +1,10 @@
 package gitlet;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -95,6 +97,13 @@ public class Blob implements Serializable {
             e.printStackTrace();
         }
         return blobObj;
+    }
+
+    public static boolean isFileSame(String blobID1, String blobID2){
+        Blob blob1 = Blob.readBlobFromDisk(blobID1);
+        Blob blob2 = Blob.readBlobFromDisk(blobID2);
+
+        return Arrays.equals(blob1.getContentAsBytes_(), blob2.getContentAsBytes_());
     }
 }
 
