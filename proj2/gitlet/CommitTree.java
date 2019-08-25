@@ -457,4 +457,81 @@ public class CommitTree implements Serializable {
         // reset the head commit
         activeBranch_.setHeadCommit_(resetCommit.getThisCommitID_());
     }
+
+
+    // true for failure
+    private boolean mergeFailureCases(String branchName){
+
+        if (!stagingArea_.getFileToAdd_().isEmpty() || !stagingArea_.getFileToRemove_().isEmpty()){
+            System.out.println("You have uncommitted changes.");
+            return true;
+        }
+
+        if (!branchNameToBranch_.containsKey(branchName)){
+            System.out.println("A branch with that name does not exist.");
+            return true;
+        }
+
+        if (activeBranch_.getBranchName_().equals(branchName)){
+            System.out.println("Cannot merge a branch with itself.");
+            return true;
+        }
+
+
+        Branch mergeBranch = branchNameToBranch_.get(branchName);
+        Commit mergeCommit = Commit.readCommitFromDisk(mergeBranch.getHeadCommit_());
+
+        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+        for (String file : workingDirFiles){
+
+            if (!stagingArea_.getPrevCommitFileToBlobIDMap().containsKey(file) && mergeCommit.getFileToBlobIDMap_().containsKey(file)){
+                System.out.println("There is an untracked file in the way; delete it or add it first.");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // TODO :: dealing with happy path rn
+    private Commit getSplitNode(String givenBranch){
+
+        Set<String> commitIDSet = new HashSet<>();
+
+        // start from the branch pointers
+        String branchPtr = activeBranch_.getBranchPtr_();
+
+        while (branchPtr != null){
+            Commit commit = Commit.readCommitFromDisk(branchPtr);
+            commitIDSet.add(commit.getThisCommitID_());
+
+            branchPtr = commit.getParentCommitID_();
+        }
+
+        String givenBranchPtr = branchNameToBranch_.get(givenBranch).getBranchPtr_();
+
+        while (givenBranchPtr != null){
+            if (commitIDSet.contains(givenBranchPtr)){
+                break;
+            }
+
+            Commit commit = Commit.readCommitFromDisk(givenBranchPtr);
+            givenBranchPtr = commit.getParentCommitID_();
+        }
+
+        return Commit.readCommitFromDisk(givenBranchPtr);
+    }
+
+    public void merge(String branchName){
+
+        // deal with failure cases first
+        boolean isFailureCase = mergeFailureCases(branchName);
+
+        if (isFailureCase){
+            return;
+        }
+
+
+
+    }
 }
