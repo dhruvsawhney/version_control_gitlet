@@ -421,27 +421,38 @@ public class CommitTree implements Serializable {
     // on the current branch
     public void reset(String commitID){
 
-        boolean found = false;
-        String branchCommit = activeBranch_.getBranchPtr_();
+        // search all branches
 
-        while(branchCommit != null){
+        boolean foundCommit = false;
+        String resetCommitID = null;
 
-            Commit commit = Commit.readCommitFromDisk(branchCommit);
+        for (Branch branch : branchNameToBranch_.values()){
+            resetCommitID = branch.getBranchPtr_();
 
-            if (commit.getThisCommitID_().equals(commitID)){
-                found = true;
-                break;
+            while(resetCommitID != null){
+
+                Commit commit = Commit.readCommitFromDisk(resetCommitID);
+
+                if (commit.getThisCommitID_().equals(commitID)){
+                    foundCommit = true;
+                    break;
+                }
+
+                resetCommitID = commit.getParentCommitID_();
             }
 
-            branchCommit = commit.getParentCommitID_();
+            if (foundCommit){
+                break;
+            }
         }
 
-        if (!found){
+
+        if (!foundCommit){
             System.out.println("No commit with that id exists.");
             return;
         }
 
-        Commit resetCommit = Commit.readCommitFromDisk(branchCommit);
+        Commit resetCommit = Commit.readCommitFromDisk(resetCommitID);
 
         // handle untracked files
         List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
