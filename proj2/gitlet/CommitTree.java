@@ -36,6 +36,19 @@ public class CommitTree implements Serializable {
         return Commit.readCommitFromDisk(activeBranch_.getHeadCommit_());
     }
 
+
+    // check if the prefix matches the id
+    private boolean checkPrefixMatch(String prefix, String commitID){
+
+        // prefix must be less than 40 characters (user input)
+        // since the hash is consistently 40 characters
+        if (prefix.length() < 40){
+            String commitPrefix = commitID.substring(0, prefix.length());
+            return commitPrefix.equals(prefix);
+        }
+        return false;
+    }
+
     // called at initialization only
     public static CommitTree initCommitTree(){
 
@@ -296,7 +309,7 @@ public class CommitTree implements Serializable {
         while (currPtr != null){
             Commit commit = Commit.readCommitFromDisk(currPtr);
 
-            if (commit.getThisCommitID_().equals(commitID)){
+            if (commit.getThisCommitID_().equals(commitID) || checkPrefixMatch(commitID, commit.getThisCommitID_())){
                 found = true;
                 break;
             }
@@ -418,6 +431,7 @@ public class CommitTree implements Serializable {
         deleteBranchMapping(branchName);
     }
 
+
     // on the current branch
     public void reset(String commitID){
 
@@ -433,7 +447,7 @@ public class CommitTree implements Serializable {
 
                 Commit commit = Commit.readCommitFromDisk(resetCommitID);
 
-                if (commit.getThisCommitID_().equals(commitID)){
+                if (commit.getThisCommitID_().equals(commitID) || checkPrefixMatch(commitID, commit.getThisCommitID_())){
                     foundCommit = true;
                     break;
                 }
