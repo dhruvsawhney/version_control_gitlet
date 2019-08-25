@@ -292,20 +292,29 @@ public class CommitTree implements Serializable {
 
     public void checkoutFilePrevCommmit(String commitID, String fileName){
 
-        // checkout file on the active branch
-        // use of BranchPtr to access all commits along branch
-        String currPtr = activeBranch_.getBranchPtr_();
+        // search all branches to find commitID
+
         boolean found = false;
+        String currPtr = null;
 
-        while (currPtr != null){
-            Commit commit = Commit.readCommitFromDisk(currPtr);
+        for (Branch branch : branchNameToBranch_.values()){
 
-            if (commit.getThisCommitID_().equals(commitID) || checkPrefixMatch(commitID, commit.getThisCommitID_())){
-                found = true;
-                break;
+            currPtr = branch.getBranchPtr_();
+
+            while (currPtr != null){
+                Commit commit = Commit.readCommitFromDisk(currPtr);
+
+                if (commit.getThisCommitID_().equals(commitID) || checkPrefixMatch(commitID, commit.getThisCommitID_())){
+                    found = true;
+                    break;
+                }
+
+                currPtr = commit.getParentCommitID_();
             }
 
-            currPtr = commit.getParentCommitID_();
+            if (found){
+                break;
+            }
         }
 
         if (!found){
@@ -481,6 +490,7 @@ public class CommitTree implements Serializable {
         }
 
 
+        // deal with untracked files
         Branch mergeBranch = branchNameToBranch_.get(branchName);
         Commit mergeCommit = Commit.readCommitFromDisk(mergeBranch.getHeadCommit_());
 
@@ -565,10 +575,6 @@ public class CommitTree implements Serializable {
             return;
         }
 
-        // TODO :: need to write runtime objects to disk
-
-        // work with respect to the currentNode
-
         // step 1
         for (String file : currNode.getFileToBlobIDMap_().keySet()){
 
@@ -588,12 +594,17 @@ public class CommitTree implements Serializable {
             }
         }
 
+
         // step 4
         for (String file : mergeNode.getFileToBlobIDMap_().keySet()){
 
             if (!isFilePresent(file, splitNode) && !isFilePresent(file, currNode) && isFilePresent(file, mergeNode)){
+//                System.out.println("FILE IS: " + file);
                 this.checkoutFilePrevCommmit(mergeNode.getThisCommitID_(), file);
                 stagingArea_.getFileToAdd_().add(file);
+
+//                List<String> wdFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+//                System.out.println("K.TXT PRESENT: " + wdFiles.contains("k.txt"));
             }
         }
 
@@ -655,10 +666,18 @@ public class CommitTree implements Serializable {
 
         if (mergeConflict){
             System.out.println("Encountered a merge conflict.");
-            return;
+        } else{
+            String message = String.format("Merged %s with %s.", activeBranch_.getBranchName_(), branchName);
+            this.commit(message);
         }
 
-        System.out.println(String.format("Merged %s with %s.", activeBranch_.getBranchName_(), branchName));
+//        StringBuilder sb = new StringBuilder();
+//        List<String> wdFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+//        for (String file : wdFiles){
+//            sb.append(file);
+//            sb.append("     ");
+//        }
+//        System.out.println(new String(sb));
     }
 }
 

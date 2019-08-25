@@ -217,6 +217,11 @@ public class Main {
                 program.getTree_().reset(args[1]);
                 break;
 
+            case "merge":
+                checkNumArgs(2, args);
+                program.getTree_().merge(args[1]);
+                break;
+
             default:
                 System.out.println("No command with that name exists.");
                 break;
