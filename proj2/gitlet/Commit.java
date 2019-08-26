@@ -11,12 +11,15 @@ public class Commit implements Serializable {
 
     private static final DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    // the user message for this commit
     private String commitMessage_;
+    // the parent pointer for this commit
     private String parentCommitID_;
+    // this commit's SHA-ID
     private String thisCommitID_;
+    // the timestamp for this commit
     private String timestamp_;
-
-    // file-name to blobID (hash)
+    // mapping from file-name to BlobID (files tracked by this commit)
     private Map<String, String> fileToBlobIDMap_;
 
     // used to initialize staging area
@@ -34,7 +37,6 @@ public class Commit implements Serializable {
         timestamp_ = sdf.format(date);
 
         fileToBlobIDMap_ = new HashMap<>();
-
         thisCommitID_ = getHash();
     }
 
@@ -95,6 +97,7 @@ public class Commit implements Serializable {
         }
     }
 
+    // read commit object from disk
     static Commit readCommitFromDisk(String commitID){
 
         Commit commitObj = null;

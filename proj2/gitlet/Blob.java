@@ -6,10 +6,11 @@ import java.util.Arrays;
 
 class Blob implements Serializable {
 
+    // the file-name for this blob
     private String fileName_;
-
+    // the contents for the file
     private byte[] contentAsBytes_;
-
+    // the SHA-ID for this blob object
     private String contentHash_;
 
     Blob(String fileName){
@@ -35,7 +36,8 @@ class Blob implements Serializable {
         return contentAsBytes_;
     }
 
-    // create hash based on the content of the file (as byte arr)
+    // create hash based on the content of the file
+    // hash based on byte array
     private String setContentHash_() {
         File tempFile = new File(fileName_);
 
@@ -86,6 +88,7 @@ class Blob implements Serializable {
         return blobObj;
     }
 
+    // equality based on the byte array of both blob objects (underlying files)
     static boolean isFileSame(String blobID1, String blobID2){
         Blob blob1 = Blob.readBlobFromDisk(blobID1);
         Blob blob2 = Blob.readBlobFromDisk(blobID2);

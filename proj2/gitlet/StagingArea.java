@@ -7,12 +7,14 @@ import java.util.Set;
 
 class StagingArea implements Serializable {
 
+    // the files to-be-tracked from the next commit
     private Set<String> filesToAdd_;
+    // the files to-be-removed from the next commit
     private Set<String> filesToRemove_;
-    // file-name to blobID
+    // mapping from file-name to BlobID (files currently being tracked)
     private Map<String, String> prevCommitFileToBlobIDMap;
 
-    // use the mapping from the previous commit for tracking file
+    // use the mapping from the previous commit for tracking files
     StagingArea(Commit previousCommit){
         filesToAdd_ = new HashSet<>();
         filesToRemove_ = new HashSet<>();
@@ -27,11 +29,11 @@ class StagingArea implements Serializable {
         return filesToRemove_;
     }
 
-    void setPrevCommitFileToBlobIDMap(Map<String, String> prevCommitFileToBlobIDMap) {
-        this.prevCommitFileToBlobIDMap = prevCommitFileToBlobIDMap;
-    }
-
     Map<String, String> getPrevCommitFileToBlobIDMap() {
         return prevCommitFileToBlobIDMap;
+    }
+
+    void setPrevCommitFileToBlobIDMap(Map<String, String> prevCommitFileToBlobIDMap) {
+        this.prevCommitFileToBlobIDMap = prevCommitFileToBlobIDMap;
     }
 }
