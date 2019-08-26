@@ -7,11 +7,6 @@ import java.io.*;
 */
 public class Main {
 
-    private static final String GITLET_DIR = ".gitlet/";
-    private static final String COMMIT_DIR = "Commits";
-    private static final String BLOBS_DIR = "Blobs";
-    private static final String COMMIT_TREE = "commitTree";
-
     private CommitTree tree_;
 
     public CommitTree getTree_() {
@@ -25,7 +20,7 @@ public class Main {
     // create the .gitlet directory
     // add the two subdirectories: Commit, Blobs
     public boolean createGitletDirectory(){
-        File dir = new File(GITLET_DIR);
+        File dir = new File(Utils.GITLET_DIR);
 
         if(!dir.exists()){
             dir.mkdir();
@@ -35,13 +30,13 @@ public class Main {
             return false;
         }
 
-        File commitDir = Utils.join(GITLET_DIR, COMMIT_DIR);
+        File commitDir = Utils.join(Utils.GITLET_DIR, Utils.COMMIT_DIR);
 
         if(!commitDir.exists()){
             commitDir.mkdir();
         }
 
-        File blobDir = Utils.join(GITLET_DIR, BLOBS_DIR);
+        File blobDir = Utils.join(Utils.GITLET_DIR, Utils.BLOBS_DIR);
 
         if (!blobDir.exists()){
             blobDir.mkdir();
@@ -51,7 +46,7 @@ public class Main {
 
     public void SaveTree(){
 
-        File outFile = Utils.join(".gitlet", COMMIT_TREE);
+        File outFile = Utils.join(Utils.GITLET_DIR, Utils.COMMIT_TREE);
 
         try {
 
@@ -71,7 +66,7 @@ public class Main {
 
     public CommitTree loadTree(){
 
-        File inFile = Utils.join(".gitlet", COMMIT_TREE);
+        File inFile = Utils.join(Utils.GITLET_DIR, Utils.COMMIT_TREE);
 
         if (!inFile.exists()){
             return null;

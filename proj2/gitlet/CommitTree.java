@@ -103,7 +103,7 @@ public class CommitTree implements Serializable {
         Branch mergeBranch = branchNameToBranch_.get(branchName);
         Commit mergeCommit = Commit.readCommitFromDisk(mergeBranch.getHeadCommit_());
 
-        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+        List<String> workingDirFiles = Utils.plainFilenamesIn(Utils.WORKING_DIR);
         for (String file : workingDirFiles){
 
             if (!stagingArea_.getPrevCommitFileToBlobIDMap().containsKey(file) && mergeCommit.getFileToBlobIDMap_().containsKey(file)){
@@ -200,8 +200,7 @@ public class CommitTree implements Serializable {
 
     public void add(String fileName){
 
-        String dirName = System.getProperty("user.dir");
-        List<String> filesInDir = Utils.plainFilenamesIn(dirName);
+        List<String> filesInDir = Utils.plainFilenamesIn(Utils.WORKING_DIR);
 
         if (!filesInDir.contains(fileName)){
             System.out.println("File does not exist.");
@@ -446,7 +445,7 @@ public class CommitTree implements Serializable {
         Commit checkoutCommit = Commit.readCommitFromDisk(checkoutBranch.getHeadCommit_());
 
         // handle un-tracked files
-        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+        List<String> workingDirFiles = Utils.plainFilenamesIn(Utils.WORKING_DIR);
         for (String file : workingDirFiles){
 
             // the un-tracked file would be overwritten by checkout
@@ -539,7 +538,7 @@ public class CommitTree implements Serializable {
         Commit resetCommit = Commit.readCommitFromDisk(resetCommitID);
 
         // handle untracked files
-        List<String> workingDirFiles = Utils.plainFilenamesIn(System.getProperty("user.dir"));
+        List<String> workingDirFiles = Utils.plainFilenamesIn(Utils.WORKING_DIR);
         for (String file : workingDirFiles){
 
             // the untracked file would be overwritten by reset commit

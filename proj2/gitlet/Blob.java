@@ -52,11 +52,8 @@ public class Blob implements Serializable {
 
     // write commit object to disk
     public void writeBlobToDisk(){
-        String[] tempArr = new String[2];
-        tempArr[0] = "Blobs";
-        tempArr[1] = contentHash_;
 
-        File outFile = Utils.join(".gitlet", tempArr);
+        File outFile = Utils.join(Utils.GITLET_DIR, Utils.BLOBS_DIR, contentHash_);
 
         try {
             outFile.createNewFile();
@@ -72,12 +69,9 @@ public class Blob implements Serializable {
     }
 
     public static Blob readBlobFromDisk(String blobID){
-        String[] tempArr = new String[2];
-        tempArr[0] = "Blobs";
-        tempArr[1] = blobID;
 
         Blob blobObj = null;
-        File inFile =  Utils.join(".gitlet", "Blobs", blobID);
+        File inFile =  Utils.join(Utils.GITLET_DIR, Utils.BLOBS_DIR, blobID);
         try {
             ObjectInputStream inp = new ObjectInputStream(new FileInputStream(inFile));
             blobObj = (Blob) inp.readObject();

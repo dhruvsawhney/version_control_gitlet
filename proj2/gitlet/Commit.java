@@ -73,11 +73,8 @@ public class Commit implements Serializable {
 
     // write commit object to disk
     public void writeCommitToDisk(){
-        String[] tempArr = new String[2];
-        tempArr[0] = "Commits";
-        tempArr[1] = thisCommitID_;
 
-        File outFile = Utils.join(".gitlet", tempArr);
+        File outFile = Utils.join(Utils.GITLET_DIR, Utils.COMMIT_DIR, thisCommitID_);
 
         try {
             outFile.createNewFile();
@@ -93,12 +90,9 @@ public class Commit implements Serializable {
     }
 
     public static Commit readCommitFromDisk(String commitID){
-        String[] tempArr = new String[2];
-        tempArr[0] = "Commits";
-        tempArr[1] = commitID;
 
         Commit commitObj = null;
-        File inFile =  Utils.join(".gitlet", "Commits", commitID);
+        File inFile =  Utils.join(Utils.GITLET_DIR, Utils.COMMIT_DIR, commitID);
         try {
             ObjectInputStream inp = new ObjectInputStream(new FileInputStream(inFile));
             commitObj = (Commit) inp.readObject();

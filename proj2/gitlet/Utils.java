@@ -17,6 +17,13 @@ import java.util.List;
    @author P. N. Hilfinger */
 class Utils {
 
+    static final String GITLET_DIR = ".gitlet";
+    static final String COMMIT_DIR = "Commits";
+    static final String BLOBS_DIR = "Blobs";
+    static final String COMMIT_TREE = "commitTree";
+    static final String WORKING_DIR = System.getProperty("user.dir");
+
+
     /* SHA-1 HASH VALUES. */
 
     /* Returns the SHA-1 hash of the concatenation of VALS, which may be any
@@ -55,7 +62,7 @@ class Utils {
        IllegalArgumentException unless the directory designated by FILE also
        contains a directory named .gitlet. */
     static boolean restrictedDelete(File file) {
-        if (!(new File(file.getParentFile(), ".gitlet")).isDirectory()) {
+        if (!(new File(file.getParentFile(), Utils.GITLET_DIR)).isDirectory()) {
             throw new IllegalArgumentException("not .gitlet working directory");
         }
         if (!file.isDirectory()) {
