@@ -9,17 +9,17 @@ public class Main {
 
     private CommitTree tree_;
 
-    public CommitTree getTree_() {
+    private CommitTree getTree_() {
         return tree_;
     }
 
-    public void setTree_(CommitTree tree_) {
+    private void setTree_(CommitTree tree_) {
         this.tree_ = tree_;
     }
 
     // create the .gitlet directory
     // add the two subdirectories: Commit, Blobs
-    public boolean createGitletDirectory(){
+    private boolean createGitletDirectory(){
         File dir = new File(Utils.GITLET_DIR);
 
         if(!dir.exists()){
@@ -44,7 +44,7 @@ public class Main {
         return true;
     }
 
-    public void SaveTree(){
+    private void SaveTree(){
 
         File outFile = Utils.join(Utils.GITLET_DIR, Utils.COMMIT_TREE);
 
@@ -64,7 +64,7 @@ public class Main {
         }
     }
 
-    public CommitTree loadTree(){
+    private CommitTree loadTree(){
 
         File inFile = Utils.join(Utils.GITLET_DIR, Utils.COMMIT_TREE);
 
@@ -97,7 +97,13 @@ public class Main {
     }
 
     private void checkoutArgs(String[] args){
-        // len is at least 1
+
+        if (args.length > 4){
+            System.out.println("Incorrect operands.");
+            return;
+        }
+
+        // len is at least 1 as this function is called from main
         if (args.length == 2){
             this.getTree_().checkoutBranch(args[1]);
         } else if (args.length == 3){
@@ -113,12 +119,7 @@ public class Main {
                 System.out.println("Incorrect operands.");
                 return;
             }
-
             this.getTree_().checkoutFilePrevCommmit(args[1], args[3]);
-
-        } else if (args.length > 4){
-            System.out.println("Incorrect operands.");
-            return;
         }
     }
 
@@ -131,6 +132,7 @@ public class Main {
             return;
         }
 
+        // load commit-tree if .gitlet initialized
         Main program = new Main();
         program.setTree_(program.loadTree());
 
@@ -141,10 +143,10 @@ public class Main {
 
         String command = args[0];
         switch (command){
+
             case "init":
 
                 checkNumArgs(1, args);
-
                 boolean created = program.createGitletDirectory();
                 if (created){
                     program.setTree_(CommitTree.initCommitTree());
@@ -164,9 +166,11 @@ public class Main {
                 break;
 
             case "rm":
+
                 checkNumArgs(2, args);
                 program.getTree_().removeFile(args[1]);
                 break;
+
             case "log":
 
                 checkNumArgs(1, args);
@@ -186,39 +190,48 @@ public class Main {
                 break;
 
             case "status":
+
                 checkNumArgs(1, args);
                 program.getTree_().status();
                 break;
 
             case "checkout":
+
+                // check arguments and invoke specific checkout command
                 program.checkoutArgs(args);
                 break;
 
             case "branch":
+
                 checkNumArgs(2, args);
                 program.getTree_().branch(args[1]);
                 break;
 
             case "rm-branch":
+
                 checkNumArgs(2, args);
                 program.getTree_().removeBranch(args[1]);
                 break;
 
             case "reset":
+
                 checkNumArgs(2, args);
                 program.getTree_().reset(args[1]);
                 break;
 
             case "merge":
+
                 checkNumArgs(2, args);
                 program.getTree_().merge(args[1]);
                 break;
 
             default:
+
                 System.out.println("No command with that name exists.");
                 break;
         }
 
+        // save commit-tree to disk
         program.SaveTree();
     }
 }
