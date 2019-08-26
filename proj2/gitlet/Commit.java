@@ -19,6 +19,12 @@ public class Commit implements Serializable {
     // file-name to blobID (hash)
     private Map<String, String> fileToBlobIDMap_;
 
+    // used to initialize staging area
+    // Required: initialized map
+    public Commit(){
+        parentCommitID_ = null;
+        fileToBlobIDMap_ = new HashMap<>();
+    }
 
     public Commit(String commitMessage, String parentCommitID){
         commitMessage_ = commitMessage;
@@ -50,29 +56,29 @@ public class Commit implements Serializable {
         return Utils.sha1(temp);
     }
 
-    public String getThisCommitID_() {
+    String getThisCommitID_() {
         return thisCommitID_;
     }
 
-    public Map<String, String> getFileToBlobIDMap_() {
+    Map<String, String> getFileToBlobIDMap_() {
         return fileToBlobIDMap_;
     }
 
 
-    public String getParentCommitID_() {
+    String getParentCommitID_() {
         return parentCommitID_;
     }
 
-    public String getTimestamp_() {
+    String getTimestamp_() {
         return timestamp_;
     }
 
-    public String getCommitMessage_() {
+    String getCommitMessage_() {
         return commitMessage_;
     }
 
     // write commit object to disk
-    public void writeCommitToDisk(){
+    void writeCommitToDisk(){
 
         File outFile = Utils.join(Utils.GITLET_DIR, Utils.COMMIT_DIR, thisCommitID_);
 
@@ -89,7 +95,7 @@ public class Commit implements Serializable {
         }
     }
 
-    public static Commit readCommitFromDisk(String commitID){
+    static Commit readCommitFromDisk(String commitID){
 
         Commit commitObj = null;
         File inFile =  Utils.join(Utils.GITLET_DIR, Utils.COMMIT_DIR, commitID);
@@ -109,7 +115,7 @@ public class Commit implements Serializable {
     }
 
     // return the blob if it exists
-    public Blob blobExist(String blobHash){
+    Blob blobExist(String blobHash){
 
         for(String blobID : fileToBlobIDMap_.values()){
 
@@ -121,7 +127,7 @@ public class Commit implements Serializable {
         return null;
     }
 
-    public Blob getBlob(String fileName){
+    Blob getBlob(String fileName){
 
         return Blob.readBlobFromDisk(fileToBlobIDMap_.get(fileName));
     }

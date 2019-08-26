@@ -4,7 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.Arrays;
 
-public class Blob implements Serializable {
+class Blob implements Serializable {
 
     private String fileName_;
 
@@ -12,32 +12,31 @@ public class Blob implements Serializable {
 
     private String contentHash_;
 
-    public Blob(String fileName){
+    Blob(String fileName){
         fileName_ = fileName;
         contentAsBytes_ = setContentAsBytes_();
         contentHash_ = setContentHash_();
     }
 
-    public String getFileName_() {
+    String getFileName_() {
         return fileName_;
     }
 
-    public String getContentHash_() {
+    String getContentHash_() {
         return contentHash_;
     }
 
-
-    public byte[] setContentAsBytes_() {
+    private byte[] setContentAsBytes_() {
 
         return Utils.readContents(new File(fileName_));
     }
 
-    public byte[] getContentAsBytes_() {
+    byte[] getContentAsBytes_() {
         return contentAsBytes_;
     }
 
     // create hash based on the content of the file (as byte arr)
-    public String setContentHash_() {
+    private String setContentHash_() {
         File tempFile = new File(fileName_);
 
         byte[] fileToAddBytes = new byte[0];
@@ -51,7 +50,7 @@ public class Blob implements Serializable {
     }
 
     // write commit object to disk
-    public void writeBlobToDisk(){
+    void writeBlobToDisk(){
 
         File outFile = Utils.join(Utils.GITLET_DIR, Utils.BLOBS_DIR, contentHash_);
 
@@ -68,7 +67,7 @@ public class Blob implements Serializable {
         }
     }
 
-    public static Blob readBlobFromDisk(String blobID){
+    static Blob readBlobFromDisk(String blobID){
 
         Blob blobObj = null;
         File inFile =  Utils.join(Utils.GITLET_DIR, Utils.BLOBS_DIR, blobID);
@@ -87,7 +86,7 @@ public class Blob implements Serializable {
         return blobObj;
     }
 
-    public static boolean isFileSame(String blobID1, String blobID2){
+    static boolean isFileSame(String blobID1, String blobID2){
         Blob blob1 = Blob.readBlobFromDisk(blobID1);
         Blob blob2 = Blob.readBlobFromDisk(blobID2);
 

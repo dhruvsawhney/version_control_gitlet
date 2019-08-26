@@ -2,7 +2,7 @@ package gitlet;
 
 import java.io.Serializable;
 
-public class Branch implements Serializable {
+class Branch implements Serializable {
 
     private String branchName_;
 
@@ -13,29 +13,29 @@ public class Branch implements Serializable {
     private String branchPtr_;
 
     // both head and brac
-    public Branch(String branchName, String headCommit){
+    Branch(String branchName, String headCommit){
         branchName_= branchName;
         headCommit_ = headCommit;
         branchPtr_ = headCommit;
     }
 
-    public String getBranchName_() {
+    String getBranchName_() {
         return branchName_;
     }
 
-    public String getHeadCommit_() {
+    String getHeadCommit_() {
         return headCommit_;
     }
 
-    public void setHeadCommit_(String headCommit_) {
+    void setHeadCommit_(String headCommit_) {
         this.headCommit_ = headCommit_;
     }
 
-    public String getBranchPtr_() {
+    String getBranchPtr_() {
         return branchPtr_;
     }
 
-    public void setBranchPtr_(String branchPtr_) {
+    void setBranchPtr_(String branchPtr_) {
         this.branchPtr_ = branchPtr_;
     }
 }
