@@ -34,11 +34,11 @@ Using the version-control system locally:
         ...
 
 
-## Command Usage (gitlet commands are indented):
+## Command Usage (gitlet commands after each command description):
 
 1. init: initialize the .gitlet repository
 
-    java gitlet.Main init
+###    java gitlet.Main init
 
 2. add: Adds a copy of the file as it currently exists to the staging area
 
@@ -70,9 +70,11 @@ Using the version-control system locally:
 
 9. checkout: Checkout is a kind of general command that can do a few different things depending on what its arguments are.
 
-    java gitlet.Main checkout -- [file name]
-    java gitlet.Main checkout [commit id] -- [file name]
-    java gitlet.Main checkout [branch name]
+    java gitlet.Main checkout -- [file name];
+    
+    java gitlet.Main checkout [commit id] -- [file name];
+    
+    java gitlet.Main checkout [branch name];
     
 10. branch: Creates a new branch with the given name branch name, and points the branch at the current head node.
 
