@@ -35,7 +35,7 @@ Using the version-control system locally:
 
 
 ## Command Usage:
-    
-    #init
 
-        java gitlet.Main init
+init: initialize the .gitlet repository
+
+    java gitlet.Main init
