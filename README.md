@@ -11,7 +11,9 @@ The list of Gitlet commands implemented are:
     
     
 Using the version-control system locally:
-    
+
+In the steps below, we will clone the project, compile it locally and, finally, place the binaries in a test directory. Since we have placed the program's binary in the test directory, we can use the commands created in this project to test version control functionality for any file created.
+
     1. Clone this repository
 
     2. From the root dir, cd into "app" dir
