@@ -23,7 +23,6 @@ public class Commit implements Serializable {
     private Map<String, String> fileToBlobIDMap_;
 
     // used to initialize staging area
-    // Required: initialized map
     public Commit(){
         parentCommitID_ = null;
         fileToBlobIDMap_ = new HashMap<>();

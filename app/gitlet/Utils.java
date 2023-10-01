@@ -13,8 +13,6 @@ import java.util.Formatter;
 import java.util.List;
 
 
-/* Assorted utilities.
-   @author P. N. Hilfinger */
 class Utils {
 
     static final String GITLET_DIR = ".gitlet";

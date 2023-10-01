@@ -2,7 +2,7 @@ package gitlet;
 
 import java.io.*;
 
-/* Driver class for Gitlet, the tiny stupid version-control system.
+/* Driver class for Gitlet
    @author Dhruv Sawhney
 */
 public class Main {
